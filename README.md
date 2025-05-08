@@ -2,7 +2,7 @@
 
 Este proyecto es una aplicación frontend construida con **React + Vite + Tailwind CSS**. Tenía una estructura tipo monorepo con el frontend dentro de la carpeta `client/`.
 
-Este `README.md` documenta los pasos realizados para limpiar, reorganizar y desplegar correctamente la aplicación en Vercel.
+Este `README.md` documenta los pasos realizados para limpiar, reorganizar y desplegar correctamente la aplicación en Vercel y dejar funcionando el entorno local con backend Express.
 
 ---
 
@@ -37,12 +37,6 @@ rm -rf client
 ---
 
 ### 2. Actualizar `vite.config.ts`
-
-Anteriormente tenía esto:
-
-```ts
-root: path.resolve(__dirname, "client")
-```
 
 Se eliminó la propiedad `root` y se actualizó la configuración así:
 
@@ -95,8 +89,6 @@ Se confirmó que `index.css` está correctamente importado desde `main.tsx`:
 import './index.css';
 ```
 
-No se añadió `<link>` manual en `index.html`, ya que Vite se encarga de inyectarlo.
-
 ---
 
 ### 5. Limpiar y hacer build
@@ -129,11 +121,49 @@ git push
 
 ---
 
+### ✅ Servidor local con Express
+
+Para desarrollo local, el backend `server/index.ts` fue simplificado para servir el contenido compilado del frontend:
+
+```ts
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 5001;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, "../dist")));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+});
+```
+
+Esto no afecta el deploy en Vercel porque Vercel **no usa `server/index.ts`**.
+
+---
+
 ## ✅ Resultado final
 
 Tu proyecto ahora se muestra correctamente en producción en:
 
 🔗 [https://www.cascadiataps.com](https://www.cascadiataps.com)
+
+Y funciona en local vía:
+
+```bash
+npm run build
+npm run dev
+```
 
 ---
 
@@ -146,4 +176,4 @@ Tu proyecto ahora se muestra correctamente en producción en:
 
 ---
 
-Desarrollado con por Dario Realpe y subido por Jorge Arboleda.
+Desarrollado por Dario Realpe y subido por Jorge Arboleda.
