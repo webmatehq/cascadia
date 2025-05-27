@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-
+// trigger
 const EventsSection = () => {
   return (
     <section id="events" className="bg-white py-16 px-4">
