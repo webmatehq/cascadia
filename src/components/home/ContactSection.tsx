@@ -73,8 +73,8 @@ export default function ContactSection() {
     {
       icon: Mail,
       title: "Email",
-      value: "andreavwuttke@gmail.com",
-      href: "mailto:andreavwuttke@gmail.com",
+      value: "andreaw@CascadiaTapHouse.onmicrosoft.com",
+      href: "mailto:andreaw@CascadiaTapHouse.onmicrosoft.com",
     },
     {
       icon: Phone,
@@ -85,7 +85,7 @@ export default function ContactSection() {
     {
       icon: MapPin,
       title: "Address",
-      value: "Building A 624, Trades District\nEast Wenatchee, WA",
+      value: "2301–2399 Seventh St SE\nEast Wenatchee, WA",
       href: "#",
     },
   ];

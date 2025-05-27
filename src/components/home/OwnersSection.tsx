@@ -36,7 +36,7 @@ export default function OwnersSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <p className="text-lg mb-6">
-                Hi! We're Austin and Andrea Wuttke, the owners of Cascadia Tap House. As longtime locals and lovers of the outdoors (and a great beer or glass of wine), we wanted to build something that reflects the heart of the Wenatchee Valley—laid back, full of character, and rooted in community.
+                As longtime locals and lovers of the outdoors (and a great beer or glass of wine), we wanted to build something that reflects the heart of the Wenatchee Valley—laid back, full of character, and rooted in community.
               </p>
               <p className="text-lg">
                 Our vision is to create a space where friends can gather, visitors can experience local flavors, and everyone feels welcome. We're passionate about supporting small producers and bringing the best of the Pacific Northwest together under one roof.

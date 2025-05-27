@@ -1,7 +1,8 @@
 import { Container } from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { motion } from "framer-motion";
-
+import communitySpace from '../../assets/wenatchee-wa-AdobeStock_261465065-scaled.webp';
+import localCraft from "../../assets/9428a9df-26df-40e5-91fe-1d26ef0b7b14.jpeg"
 interface FeatureCardProps {
   title: string;
   description: string;
@@ -33,9 +34,9 @@ function FeatureCard({ title, description, imageSrc, delay }: FeatureCardProps) 
 export default function AboutSection() {
   const features = [
     {
-      title: "Local Craft Beer",
-      description: "Featuring rotating taps from the best Pacific Northwest breweries, with a focus on local craftsmanship and unique flavors.",
-      imageSrc: "https://images.unsplash.com/photo-1559526324-593bc073d938?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
+      title: "Community Space",
+      description: "A welcoming environment for friends to gather, including a dog-friendly outdoor area to enjoy the Wenatchee Valley weather.",
+      imageSrc:communitySpace
     },
     {
       title: "Fine Wines",
@@ -43,10 +44,10 @@ export default function AboutSection() {
       imageSrc: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
     },
     {
-      title: "Community Space",
-      description: "A welcoming environment for friends to gather, including a dog-friendly outdoor area to enjoy the Wenatchee Valley weather.",
-      imageSrc: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-    }
+      title: "Local Craft Beer",
+      description: "Featuring rotating taps from the best Pacific Northwest breweries, with a focus on local craftsmanship and unique flavors.",
+      imageSrc: localCraft
+    },
   ];
 
   return (

@@ -9,6 +9,7 @@ import ContactSection from "@/components/home/ContactSection";
 import Footer from "@/components/layout/Footer";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import EventsSection from "@/components/home/EventsSection";
 
 export default function HomePage() {
   // Scroll to the section if URL has hash
@@ -40,6 +41,7 @@ export default function HomePage() {
         <HeroSection />
         <AboutSection />
         <OwnersSection />
+        <EventsSection />
         <TapRoomGallery />
         <LocationSection />
         <ContactSection />

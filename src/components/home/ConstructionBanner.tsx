@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-
+// trigger
 export default function ConstructionBanner() {
   return (
     <motion.div 

@@ -13,6 +13,7 @@ const navigation: NavItem[] = [
   { name: "Home", href: "#home" },
   { name: "About", href: "#about" },
   { name: "Owners", href: "#owners" },
+  { name: "Events", href: "#events" },
   { name: "Location", href: "#location" },
   { name: "Contact", href: "#contact" },
 ];

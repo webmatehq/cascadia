@@ -1,7 +1,8 @@
 import { Container } from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { motion } from "framer-motion";
-
+import Craftbeertaps from "../../assets/acogedor-interior-bar-rustico-vaso-cerveza-iluminado-mesa-madera_252600-8351.jpg"
+import Cozytaproominterior from "../../assets/pexels-photo-29844873.webp"
 interface GalleryImageProps {
   src: string;
   alt: string;
@@ -30,11 +31,11 @@ function GalleryImage({ src, alt, className, delay }: GalleryImageProps) {
 export default function TapRoomGallery() {
   const galleryImages = [
     {
-      src: "https://images.unsplash.com/photo-1498603898392-38a5b67d258b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
+      src: Craftbeertaps,
       alt: "Craft beer taps"
     },
     {
-      src: "https://images.unsplash.com/photo-1577301656482-3e6490e59626?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
+      src: Cozytaproominterior,
       alt: "Cozy taproom interior"
     },
     {

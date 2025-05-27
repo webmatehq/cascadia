@@ -40,17 +40,18 @@ export default function LocationSection() {
               
               <p className="mb-4">
                 <strong>Cascadia Tap House</strong><br />
-                Building A 624, Trades District<br />
-                East Wenatchee, WA
+                2301–2399 Seventh St SE<br />
+                East Wenatchee, WA 98802
               </p>
               
               <div className="h-64 bg-gray-200 rounded-md overflow-hidden">
-                <div 
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ 
-                    backgroundImage: "url('https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80')" 
-                  }}
-                ></div>
+              <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2699.3247081883205!2d-120.31697612293915!3d47.4251115!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x549bcdaedad1f29f%3A0x9b0acb4706406a23!2sMercantile!5e0!3m2!1ses!2ses!4v1748301055004!5m2!1ses!2ses" 
+              width="600" 
+              height="450" 
+              style={{ border: 0 }}
+              referrerPolicy="no-referrer-when-downgrade"
+              loading="lazy" ></iframe>
               </div>
             </motion.div>
             

@@ -13,8 +13,8 @@ const quickLinks = [
 const contactInfo = [
   { 
     type: "email", 
-    value: "andreavwuttke@gmail.com", 
-    href: "mailto:andreavwuttke@gmail.com" 
+    value: "andreaw@CascadiaTapHouse.onmicrosoft.com", 
+    href: "mailto:andreaw@CascadiaTapHouse.onmicrosoft.com" 
   },
   { 
     type: "phone", 
@@ -45,9 +45,6 @@ export default function Footer() {
               <h3 className="font-montserrat font-bold text-2xl text-[#D9A566] mb-4">
                 CASCADIA TAP HOUSE
               </h3>
-              <p className="max-w-xs">
-                Your future go-to gathering spot in the Wenatchee Valley for craft beer, fine wine, and community vibes.
-              </p>
               <p className="mt-4 text-[#D9A566] italic">
                 "Pardon Our Dust, We're Crafting Something Special."
               </p>
@@ -98,7 +95,7 @@ export default function Footer() {
                     <li key={info.type}>
                       <a 
                         href={info.href} 
-                        className="hover:text-[#D9A566] transition-colors"
+                        className="hover:text-[#D9A566] transition-color break-words whitespace-normal"
                       >
                         {info.value}
                       </a>
