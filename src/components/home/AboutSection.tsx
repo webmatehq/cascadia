@@ -3,6 +3,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { motion } from "framer-motion";
 import communitySpace from '../../assets/wenatchee-wa-AdobeStock_261465065-scaled.webp';
 import localCraft from "../../assets/9428a9df-26df-40e5-91fe-1d26ef0b7b14.jpeg"
+
 interface FeatureCardProps {
   title: string;
   description: string;
@@ -58,6 +59,7 @@ export default function AboutSection() {
             title="About Us" 
             subtitle="Built for the Community. Inspired by the Northwest."
           />
+          
           
           <motion.p 
             className="text-lg"

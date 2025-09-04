@@ -85,7 +85,7 @@ export default function ContactSection() {
     {
       icon: MapPin,
       title: "Address",
-      value: "2301–2399 Seventh St SE\nEast Wenatchee, WA",
+      value: "624 S Augustin Loop\nEast Wenatchee, WA 98802",
       href: "#",
     },
   ];

@@ -1,7 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { motion } from "framer-motion";
-
+import aboutUs from "../../assets/AboutUs.jpeg"
 export default function OwnersSection() {
   return (
     <section id="owners" className="py-16 bg-[#F5F5F0]">
@@ -23,7 +23,7 @@ export default function OwnersSection() {
               <div 
                 className="rounded-lg shadow-md w-full h-[400px] bg-cover bg-center"
                 style={{ 
-                  backgroundImage: "url('https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80')" 
+                  backgroundImage: `url(${aboutUs})` 
                 }}
               ></div>
             </motion.div>
