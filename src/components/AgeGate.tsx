@@ -33,6 +33,7 @@ export default function AgeGate() {
     setDenied(true);
   };
 
+  
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
