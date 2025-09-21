@@ -10,13 +10,13 @@ interface BusinessHour {
 
 export default function LocationSection() {
   const businessHours: BusinessHour[] = [
-    { day: "Monday", hours: "11am – 8pm" },
-    { day: "Tuesday", hours: "11am – 8pm" },
-    { day: "Wednesday", hours: "11am – 8pm" },
-    { day: "Thursday", hours: "11am – 8pm" },
-    { day: "Friday", hours: "11am – 12am" },
-    { day: "Saturday", hours: "11am – 12am" },
-    { day: "Sunday", hours: "11am – 8pm" },
+    { day: "Monday", hours: "12am – 8pm" },
+    { day: "Tuesday", hours: "12am – 8pm" },
+    { day: "Wednesday", hours: "12am – 8pm" },
+    { day: "Thursday", hours: "12am – 8pm" },
+    { day: "Friday", hours: "12am – 12am" },
+    { day: "Saturday", hours: "12am – 12am" },
+    { day: "Sunday", hours: "12am – 8pm" },
   ];
 
   return (
@@ -71,11 +71,11 @@ export default function LocationSection() {
                 Hours
               </h3>
 
-              <p className="mb-4 font-semibold">Opening Soon!</p>
-              <p className="mb-6">
+              {/* <p className="mb-4 font-semibold">Opening Soon!</p> */}
+              {/* <p className="mb-6">
                 Stay tuned for our grand opening date. Once open, you can
                 expect:
-              </p>
+              </p> */}
 
               <div className="space-y-2">
                 {businessHours.map((item, index) => (

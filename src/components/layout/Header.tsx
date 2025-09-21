@@ -14,6 +14,7 @@ const navigation: NavItem[] = [
   { name: "About", href: "#about" },
   { name: "Owners", href: "#owners" },
   { name: "Events", href: "#events" },
+  { name: "Beer List", href: "#beerlist" },
   { name: "Location", href: "#location" },
   { name: "Contact", href: "#contact" },
 ];

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
+import AgeGate from "./components/AgeGate";
 // trigger 2
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <AgeGate />
       <TooltipProvider>
         <Toaster />
         <Router />
