@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
 import AgeGate from "./components/AgeGate";
 // trigger 2
+
 function Router() {
   return (
     <Switch>
