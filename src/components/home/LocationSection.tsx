@@ -10,13 +10,13 @@ interface BusinessHour {
 
 export default function LocationSection() {
   const businessHours: BusinessHour[] = [
-    { day: "Monday", hours: "12am – 8pm" },
-    { day: "Tuesday", hours: "12am – 8pm" },
-    { day: "Wednesday", hours: "12am – 8pm" },
-    { day: "Thursday", hours: "12am – 8pm" },
-    { day: "Friday", hours: "12am – 12am" },
-    { day: "Saturday", hours: "12am – 12am" },
-    { day: "Sunday", hours: "12am – 8pm" },
+    { day: "Monday", hours: "12pm – 8pm" },
+    { day: "Tuesday", hours: "12pm – 8pm" },
+    { day: "Wednesday", hours: "12pm – 8pm" },
+    { day: "Thursday", hours: "12pm – 8pm" },
+    { day: "Friday", hours: "12pm – 12am" },
+    { day: "Saturday", hours: "12pm – 12am" },
+    { day: "Sunday", hours: "12pm – 8pm" },
   ];
 
   return (
