@@ -8,9 +8,9 @@ export default function ConstructionBanner() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* <p className="font-montserrat font-semibold">
-        🚧 Pardon Our Dust, We're Crafting Something Special. Opening Summer 2025! 🚧
-      </p> */}
+      <p className="font-montserrat font-semibold">
+        🍻 Happy Hour — Mon–Wed • 1 PM – 4 PM
+      </p>
     </motion.div>
   );
 }
