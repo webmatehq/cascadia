@@ -1,8 +1,10 @@
 import { Container } from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { motion } from "framer-motion";
-import Craftbeertaps from "../../assets/acogedor-interior-bar-rustico-vaso-cerveza-iluminado-mesa-madera_252600-8351.jpg"
-import Cozytaproominterior from "../../assets/pexels-photo-29844873.webp"
+import OurSpace1 from "../../assets/our_space_1.jpeg";
+import OurSpace2 from "../../assets/our_space_2.jpeg";
+import OurSpace3 from "../../assets/our_space_3.jpeg";
+import OurSpace4 from "../../assets/our_space_4.jpeg";
 interface GalleryImageProps {
   src: string;
   alt: string;
@@ -30,27 +32,10 @@ function GalleryImage({ src, alt, className, delay }: GalleryImageProps) {
 
 export default function TapRoomGallery() {
   const galleryImages = [
-    {
-      src: Craftbeertaps,
-      alt: "Craft beer taps"
-    },
-    {
-      src: Cozytaproominterior,
-      alt: "Cozy taproom interior"
-    },
-    {
-      src: "https://images.unsplash.com/photo-1584225064785-c62a8b43d148?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
-      alt: "Outdoor seating area"
-    },
-    {
-      src: "https://images.unsplash.com/photo-1608270586620-248524c67de9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
-      alt: "Craft beer selection",
-      className: "h-64 lg:col-span-2"
-    },
-    {
-      src: "https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
-      alt: "Wine tasting"
-    }
+    { src: OurSpace1, alt: "Our space 1" },
+    { src: OurSpace2, alt: "Our space 2" },
+    { src: OurSpace3, alt: "Our space 3", className: "h-64 lg:col-span-2" },
+    { src: OurSpace4, alt: "Our space 4" },
   ];
 
   return (

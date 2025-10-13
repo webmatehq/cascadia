@@ -9,7 +9,7 @@ export default function ConstructionBanner() {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <p className="font-montserrat font-semibold">
-        🍻 Happy Hour — Mon–Wed • 1 PM – 4 PM
+        🍻 Happy Hour — Mon–Wed • 2 PM – 5 PM
       </p>
     </motion.div>
   );

@@ -19,20 +19,20 @@ export default function HappyHourSection() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div className="flex items-center text-gray-800 text-lg font-semibold">
               <Clock className="w-5 h-5 text-[#D9A566] mr-2" />
-              Mon – Wed • 1 PM – 4 PM
+              Mon – Wed • 2 PM – 5 PM
             </div>
             <div className="flex items-center text-gray-800 text-lg font-semibold">
               <Beer className="w-5 h-5 text-[#D9A566] mr-2" />
               Drafts & Cider
             </div>
-            <div className="flex items-center text-gray-800 text-lg font-semibold">
+            <div className="flex items-center text-gray-800 text-lg font-semibold"> 
               <DollarSign className="w-5 h-5 text-[#D9A566] mr-2" />
-              $2 OFF every 16oz draft
+              $2 OFF craft drinks & wine
             </div>
           </div>
 
           <p className="text-gray-700 text-lg mb-3">
-            Take $2 OFF every draft 16oz of beer or cider – it's basically therapy, but cheaper.
+            Take $2 OFF craft drinks & wine – it's basically therapy, but cheaper.
           </p>
           <p className="text-gray-700">
             Your boss doesn't need to know you're here.
