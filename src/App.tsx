@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
 import AgeGate from "./components/AgeGate";
-// trigger 4
+// trigger 5
 function Router() {
   return (
     <Switch>
