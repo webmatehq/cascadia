@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const beers = [
   { name: "Kettle House Scotch Ale", price: 8.5, abv: "6.5%" },
-  { name: "Burwood Pilsner", price: 8.5, abv: "4.9%" },
+  { name: "Bale Breaker Dormancy breakfast stout", price: 8.5, abv: "6.8%" },
   { name: "Hofbräu Original", price: 8.5, abv: "5.1%" },
   { name: "Old Schoolhouse Fresh Hop", price: 8.5, abv: "7.0%" },
   { name: "DRU BRU Hazy Sensation", price: 8.5, abv: "5.1%" },
