@@ -1,25 +1,6 @@
 import { Beer, Percent, Wine } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-const beers = [
-  { name: "Kettle House Scotch Ale", price: 8.5, abv: "6.5%" },
-  { name: "Bale Breaker Dormancy breakfast stout", price: 8.5, abv: "6.8%" },
-  { name: "Hofbräu Original", price: 8.5, abv: "5.1%" },
-  { name: "Old Schoolhouse Fresh Hop", price: 8.5, abv: "7.0%" },
-  { name: "DRU BRU Hazy Sensation", price: 8.5, abv: "5.1%" },
-  { name: "Georgetown Tavern", price: 8.5, abv: "4.9%" },
-  { name: "Reuben’s Brews Hazealicious IPA", price: 8.5, abv: "6%" },
-  { name: "Seattle Cider Honey Crisp", price: 8.5, abv: "5.5%" },
-  { name: "Icicle Dirty Face Amber Lager", price: 8.5, abv: "5.0%" },
-  { name: "Busch Light", price: 6.5, abv: "4.1%" },
-  { name: "Hofbräu Dunkel", price: 8.5, abv: "5.5%" },
-  { name: "Bale Breaker Green Rush Fresh Hops", price: 8.5, abv: "6.9%" },
-  { name: "Black Raven Brewing Perpelox Pale Ale", price: 8.5, abv: "5.3%" },
-  { name: "Backwoods Brewing S'mores Stout", price: 8.5, abv: "5.5%" },
-  { name: "Doghaus River's Irish Red", price: 8.5, abv: "5%" },
-  { name: "Bale Breaker Topcutter IPA", price: 8.5, abv: "6.8%" },
-  { name: "Burwood Hop Locker IPA", price: 8.5, abv: "6.4%" },
-];
+import { useBeerList } from "@/context/BeerListContext";
 
 type WineCategory = "Whites" | "Reds" | "Rosé";
 
@@ -53,6 +34,8 @@ const wines: WineItem[] = [
 ];
 
 const BeerListSection = () => {
+  const { beers } = useBeerList();
+
   return (
     <section id="beerlist" className="bg-white py-16 px-4">
       <div className="max-w-5xl mx-auto text-center">
