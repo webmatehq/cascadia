@@ -13,10 +13,10 @@ interface WineItem {
 
 const wines: WineItem[] = [
   // Whites
-  { name: "Silver Bell Sauv Blanc", glass: 11, bottle: 30, category: "Whites" },
-  { name: "Fielding Hills Chenin Blanc", glass: 13, bottle: 42, category: "Whites" },
+  // { name: "Silver Bell Sauv Blanc", glass: 11, bottle: 30, category: "Whites" },
+  // { name: "Fielding Hills Chenin Blanc", glass: 13, bottle: 42, category: "Whites" },
   { name: "Fielding Hills Chardonnay", glass: 13, bottle: 42, category: "Whites" },
-  { name: "Fielding Hills Roussane", glass: 14, bottle: 46, category: "Whites" },
+  { name: "Horan States Sauv Blanc", glass: 14, bottle: 46, category: "Whites" },
   { name: "Treveri Sparkling", bottle: 30, category: "Whites" },
   { name: "Silver Bell Cab Blanc", glass: 12, bottle: 30, category: "Whites" },
 

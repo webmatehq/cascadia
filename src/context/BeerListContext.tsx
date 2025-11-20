@@ -17,23 +17,29 @@ interface BeerListContextValue {
 const STORAGE_KEY = "cascadia.beers";
 
 const defaultBeers: BeerItem[] = [
-  { name: "Kettle House Scotch Ale", price: 8.5, abv: "6.5%" },
-  { name: "Bale Breaker Dormancy breakfast stout", price: 8.5, abv: "6.8%" },
-  { name: "Hofbräu Original", price: 8.5, abv: "5.1%" },
-  { name: "Old Schoolhouse Fresh Hop", price: 8.5, abv: "7.0%" },
-  { name: "DRU BRU Hazy Sensation", price: 8.5, abv: "5.1%" },
-  { name: "Georgetown Tavern", price: 8.5, abv: "4.9%" },
-  { name: "Reuben’s Brews Hazealicious IPA", price: 8.5, abv: "6%" },
+  { name: "Kettle House Scotch Ale", price: 5, abv: "6.5%" },
+
+  { name: "Bale Breaker Dormancy Breakfast Stout", price: 8.5, abv: "6.8%" },
+  { name: "No-Li Cascade Fog Hazy IPA", price: 8.5, abv: "7.5%" },
+  { name: "Union Hill Whiskey Business Cider", price: 8.5, abv: "8.5%" },
+  { name: "DRU BRU Hazy Session", price: 8.5, abv: "5.1%" },
+  { name: "Single Hill Adams Pilsner", price: 8.5, abv: "4.8%" },
+  { name: "New Belgium Dominga Grapefruit Paloma Sour", price: 8.5, abv: "8%" },
   { name: "Seattle Cider Honey Crisp", price: 8.5, abv: "5.5%" },
-  { name: "Icicle Dirty Face Amber Lager", price: 8.5, abv: "5.0%" },
+
+  { name: "Burwood Hop Locker IPA", price: 5, abv: "6.4%" },
+
+  // Columna derecha
+  { name: "Icicle Dirty Face Amber Lager", price: 8.5, abv: "5%" },
   { name: "Busch Light", price: 6.5, abv: "4.1%" },
-  { name: "Hofbräu Dunkel", price: 8.5, abv: "5.5%" },
-  { name: "Black Raven Brewing Perpelox Pale Ale", price: 8.5, abv: "5.3%" },
-  { name: "Old School House Hooligan Stout", price: 8.5, abv: "5.5%" },
-  { name: "Doghaus River's Irish Red", price: 8.5, abv: "5%" },
-  { name: "Bale Breaker Topcutter IPA", price: 8.5, abv: "6.8%" },
-  { name: "Burwood Hop Locker IPA", price: 8.5, abv: "6.4%" },
+  { name: "Schilling Moonberries Cider", price: 8.5, abv: "5.2%" },
+  { name: "Bale Breaker Green Rush Fresh Hops", price: 8.5, abv: "6.9%" },
+  { name: "Backwoods Brewing S'mores Stout", price: 8.5, abv: "5.5%" },
+  { name: "Doghaus Brewery Rover's Irish Red", price: 8.5, abv: "5%" },
+  { name: "Old School House Hooligan Stout", price: 8.5, abv: "7%" },
+  { name: "Fort George Vortex IPA", price: 8.5, abv: "7.2%" },
 ];
+
 
 const BeerListContext = createContext<BeerListContextValue | undefined>(undefined);
 
