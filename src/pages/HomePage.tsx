@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import EventsSection from "@/components/home/EventsSection";
 import BeerListSection from "../components/home/BeerListSection";
 import HappyHourSection from "@/components/home/HappyHourSection";
+import UpcomingScheduleSection from "@/components/home/UpcomingScheduleSection";
 
 export default function HomePage() {
   // Scroll to the section if URL has hash
@@ -45,6 +46,7 @@ export default function HomePage() {
         <OwnersSection />
         <HappyHourSection />
         <EventsSection />
+        <UpcomingScheduleSection />
         <BeerListSection/>
         <TapRoomGallery />
         <LocationSection />
