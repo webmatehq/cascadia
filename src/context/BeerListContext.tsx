@@ -57,7 +57,7 @@ const readFromStorage = (): BeerItem[] | null => {
 };
 
 export function BeerListProvider({ children }: { children: ReactNode }) {
-  const [beers, setBeers] = useState<BeerItem[]>(() => readFromStorage() ?? defaultBeers);
+  const [beers, setBeers] = useState<BeerItem[]>(() => defaultBeers);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
