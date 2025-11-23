@@ -1,42 +1,24 @@
-import { Instagram } from "lucide-react";
-
-const WEEK = "Week of 11/17 to 11/23";
+const WEEK = "Week of 11/24 to 11/30";
 
 const schedule = [
   {
     title: "Mon & Wed",
-    description: [
-      { text: "Happy Hour from 2pm to 5pm" },
-    ],
+    description: [{ text: "Happy Hour from 2pm to 5pm" }],
   },
   {
-    title: "Tuesday, 18th",
-    description: [{ text: "CLOSED for maintenance" }],
+    title: "Thursday, 27th",
+    description: [{ text: "Open on Thanksgiving & Happy Hour Prices! Football and free slice of pie" }],
   },
   {
-    title: "Thursday, 20th",
-    description: [
-      { text: "Trades Appreciation Day! 5pm to 8pm" },
-      { text: "The Valley Pizza Joint Pop Up! 5pm" },
-      { text: "@valleypizzajoint", icon: <Instagram className="h-4 w-4 inline-block mr-1 text-[#E4405F]" /> },
-    ],
+    title: "Friday, 28th",
+    description: [{ text: "Beer Black Friday! $2 OFF 16oz pours 7pm to 11pm" }],
   },
   {
-    title: "Friday, 21st",
-    description: [
-      { text: "Live music! with BassICally 8pm" },
-      { text: "@bassically_ig", icon: <Instagram className="h-4 w-4 inline-block mr-1 text-[#E4405F]" /> },
-    ],
+    title: "Saturday, 29th",
+    description: [{ text: "$2 OFF 16oz pours 7pm to 11pm" }],
   },
   {
-    title: "Saturday, 22nd",
-    description: [
-      { text: "The Valley Pizza Joint Pop Up! 5pm" },
-      { text: "@valleypizzajoint", icon: <Instagram className="h-4 w-4 inline-block mr-1 text-[#E4405F]" /> },
-    ],
-  },
-  {
-    title: "Sunday, 23rd",
+    title: "Sunday, 30th",
     description: [{ text: "Dog Jersey Sunday!" }],
   },
 ];
