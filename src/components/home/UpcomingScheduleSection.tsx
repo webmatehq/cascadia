@@ -7,15 +7,18 @@ const schedule = [
   },
   {
     title: "Thursday, 27th",
-    description: [{ text: "Open on Thanksgiving & Happy Hour Prices! Football and free slice of pie" }],
+    description: [
+      { text: "Open on Thanksgiving 1:30pm to 9pm!" },
+      { text: "Football on the screens and free slice of pie" },
+    ],
   },
   {
     title: "Friday, 28th",
-    description: [{ text: "Beer Black Friday! $2 OFF 16oz pours 7pm to 11pm" }],
+    description: [{ text: "Beer Black Friday! $2 OFF 16oz pours 7pm to 10pm" }],
   },
   {
     title: "Saturday, 29th",
-    description: [{ text: "$2 OFF 16oz pours 7pm to 11pm" }],
+    description: [{ text: "$2 OFF 16oz pours 7pm to 10pm" }],
   },
   {
     title: "Sunday, 30th",

@@ -35,7 +35,7 @@ const EventsSection = () => {
       id: "trades-appreciation",
       title: "Trades Appreciation Day",
       subtitle: "Thank you to the crews that keep Wenatchee building!",
-      date: "Thursday, November 20",
+      date: "Every third Thursday of the month",
       time: "5:00 – 8:00 PM",
       location: "Cascadia Tap House · Trades District",
       price: "$2 OFF pours all evening",

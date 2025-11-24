@@ -5,8 +5,10 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 const quickLinks = [
   { name: "Home", href: "#home" },
   { name: "About", href: "#about" },
-  { name: "Owners", href: "#owners" },
+  { name: "Events", href: "#events" },
+  { name: "Beer/Wine List", href: "#beerlist" },
   { name: "Location", href: "#location" },
+  { name: "Owners", href: "#owners" },
   { name: "Contact", href: "#contact" },
 ];
 

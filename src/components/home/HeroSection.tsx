@@ -51,7 +51,7 @@ export default function HeroSection() {
             outdoor space, and plenty of local love.
           </motion.p>
 
-          <motion.div
+          {/* <motion.div
             className="bg-[#D9A566]/90 p-4 rounded-md inline-block w-full text-center"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -63,7 +63,7 @@ export default function HeroSection() {
             <p>
           
             </p>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
       </Container>
     </section>
