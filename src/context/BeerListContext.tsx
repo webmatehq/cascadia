@@ -17,26 +17,25 @@ interface BeerListContextValue {
 const STORAGE_KEY = "cascadia.beers";
 
 const defaultBeers: BeerItem[] = [
-  { name: "Kettle House Scotch Ale", price: 5, abv: "6.5%" },
-
-  { name: "Bale Breaker Dormancy Breakfast Stout", price: 8.5, abv: "6.8%" },
+  { name: "One Tree Huckleberry Cider", price: 8.5, abv: "6.8%" },
+  { name: "Reuben's Hazelicious Hazy IPA", price: 8.5, abv: "6%" },
   { name: "No-Li Cascade Fog Hazy IPA", price: 8.5, abv: "7.5%" },
-  { name: "Union Hill Whiskey Business Cider", price: 8.5, abv: "8.5%" },
-  { name: "DRU BRU Hazy Session", price: 8.5, abv: "5.1%" },
+  { name: "Onion Hill Whiskey Business Cider", price: 8.5, abv: "8.5%" },
+  { name: "DRU BRU Hazy Session Hazy IPA", price: 8.5, abv: "5.1%" },
+  { name: "PFriem Pilsner", price: 8.5, abv: "4.9%" },
   { name: "New Belgium Dominga Grapefruit Paloma Sour", price: 8.5, abv: "8%" },
   { name: "Seattle Cider Honey Crisp", price: 8.5, abv: "5.5%" },
+  { name: "Old Schoolhouse Methow Blonde Ale", price: 8.5, abv: "5.0%" },
 
-  { name: "Burwood Hop Locker IPA", price: 5, abv: "6.4%" },
-
-  // Columna derecha
-  { name: "Icicle Dirty Face Amber Lager", price: 8.5, abv: "5%" },
+  // Right column
+  { name: "Boneyard RPM IPA", price: 8.5, abv: "6.5%" },
   { name: "Busch Light", price: 6.5, abv: "4.1%" },
-  { name: "Schilling Moonberries Cider", price: 8.5, abv: "5.2%" },
-  { name: "PFriem Pilsner", price: 8.5, abv: "4.9%" },
-  { name: "Backwoods Brewing S'mores Stout", price: 8.5, abv: "5.5%" },
-  { name: "Doghaus Brewery Rover's Irish Red", price: 8.5, abv: "5%" },
-  { name: "Old School House Hooligan Stout", price: 8.5, abv: "7%" },
+  { name: "Doghaus Brewery Double Dog Double IPA", price: 8.5, abv: "8%" },
+  { name: "Bale Breaker Dormancy Breakfast Stout", price: 8.5, abv: "6.8%" },
+  { name: "Backwoods Brewing Morning Stout", price: 8.5, abv: "5.5%" },
   { name: "Fort George Vortex IPA", price: 8.5, abv: "7.2%" },
+  { name: "Iron Goat Brewing Goatmeal Stout", price: 8.5, abv: "5.6%" },
+  { name: "Crucible Brewing Pilsner", price: 8.5, abv: "5%" },
 ];
 
 
