@@ -2,7 +2,7 @@ import { Beer, Percent, Wine } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useBeerList } from "@/context/BeerListContext";
 
-type WineCategory = "Whites" | "Reds" | "Rosé";
+type WineCategory = "Whites" | "Reds" | "Rosé" | "Wine Cocktails";
 
 interface WineItem {
   name: string;
@@ -13,19 +13,14 @@ interface WineItem {
 
 const wines: WineItem[] = [
   // Whites
-  // { name: "Silver Bell Sauv Blanc", glass: 11, bottle: 30, category: "Whites" },
-  // { name: "Fielding Hills Chenin Blanc", glass: 13, bottle: 42, category: "Whites" },
-  { name: "Silver bell semillon", glass: 13, bottle: 42, category: "Whites" },
-  {
-    name: "Horan States Sauv Blanc",
-    glass: 14,
-    bottle: 46,
-    category: "Whites",
-  },
-  { name: "Treveri Sparkling", bottle: 30, category: "Rosé" },
+  { name: "Horan Estates Sauv Blanc", glass: 11, bottle: 30, category: "Whites" },
+  { name: "Malaga Springs Winery White Blend", glass: 13, bottle: 36, category: "Whites" },
+  { name: "Fielding Hills Chardonnay", glass: 14, bottle: 42, category: "Whites" },
   { name: "Silver Bell Cab Blanc", glass: 12, bottle: 30, category: "Whites" },
+  { name: "Treveri Sparkling", bottle: 30, category: "Whites" },
 
   // Rosé
+  { name: "Malaga Springs Winery Syrah Rosé", glass: 13, bottle: 36, category: "Rosé" },
   { name: "Silver Bell Rosé", glass: 11, bottle: 30, category: "Rosé" },
   { name: "Fielding Hills Rosé", glass: 14, bottle: 42, category: "Rosé" },
 
@@ -33,15 +28,17 @@ const wines: WineItem[] = [
   { name: "Silver Bell Stormy", glass: 14, bottle: 42, category: "Reds" },
   { name: "Silver Bell Cab Sauv", glass: 14, bottle: 44, category: "Reds" },
   { name: "Fielding Hills Syrah", bottle: 60, category: "Reds" },
-  {
-    name: "Fielding Hills 2 Glaciers",
-    glass: 14,
-    bottle: 42,
-    category: "Reds",
-  },
+  { name: "Fielding Hills 2 Glaciers", glass: 14, bottle: 42, category: "Reds" },
   { name: "Silver Bell Malbec", glass: 15, bottle: 46, category: "Reds" },
   { name: "Silver Bell Petit Verdot", glass: 14, bottle: 44, category: "Reds" },
+
+  // Wine Cocktails
+  { name: "Sangria", glass: 8, category: "Wine Cocktails" },
+  { name: "Margaritas", glass: 8, category: "Wine Cocktails" },
+  { name: "Buzzballs", glass: 5, category: "Wine Cocktails" },
 ];
+
+const wineCategories: WineCategory[] = ["Whites", "Rosé", "Reds", "Wine Cocktails"];
 
 const BeerListSection = () => {
   const { beers } = useBeerList();
@@ -91,32 +88,37 @@ const BeerListSection = () => {
 
           <TabsContent value="wines">
             <div className="text-left">
-              {(["Whites", "Rosé", "Reds"] as WineCategory[]).map(
-                (category) => (
-                  <div key={category} className="mb-8">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                      {category}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {wines
-                        .filter((w) => w.category === category)
-                        .map((wine, idx) => (
-                          <div
-                            key={`${category}-${idx}`}
-                            className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Wine className="w-4 h-4 text-[#D9A566]" />
-                              <p className="text-lg font-semibold text-gray-900">
-                                {wine.name}
-                              </p>
-                            </div>
+              {wineCategories.map((category) => (
+                <div key={category} className="mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                    {category}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {wines
+                      .filter((w) => w.category === category)
+                      .map((wine, idx) => (
+                        <div
+                          key={`${category}-${idx}`}
+                          className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Wine className="w-4 h-4 text-[#D9A566]" />
+                            <p className="text-lg font-semibold text-gray-900">
+                              {wine.name}
+                            </p>
                           </div>
-                        ))}
-                    </div>
+                          {(wine.glass || wine.bottle) && (
+                            <p className="text-sm text-gray-700 mt-1">
+                              {wine.glass ? `$${wine.glass} glass` : ""}
+                              {wine.glass && wine.bottle ? " / " : ""}
+                              {wine.bottle ? `$${wine.bottle} bottle` : ""}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           </TabsContent>
         </Tabs>

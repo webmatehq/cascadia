@@ -18,10 +18,10 @@ const STORAGE_KEY = "cascadia.beers";
 
 const defaultBeers: BeerItem[] = [
   { name: "One Tree Huckleberry Cider", price: 8.5, abv: "6.8%" },
-  { name: "Reuben's Hazelicious Hazy IPA", price: 8.5, abv: "6%" },
+  { name: "Doghaus Brewery Rover's Irish Red Ale", price: 8.5, abv: "5%" },
   { name: "No-Li Cascade Fog Hazy IPA", price: 8.5, abv: "7.5%" },
-  { name: "Onion Hill Whiskey Business Cider", price: 8.5, abv: "8.5%" },
-  { name: "DRU BRU Hazy Session Hazy IPA", price: 8.5, abv: "5.1%" },
+  { name: "Union Hill Whiskey Business Cider", price: 8.5, abv: "8.5%" },
+  { name: "Fort George Brewery Fields Hazy IPA", price: 8.5, abv: "7%" },
   { name: "PFriem Pilsner", price: 8.5, abv: "4.9%" },
   { name: "New Belgium Dominga Grapefruit Paloma Sour", price: 8.5, abv: "8%" },
   { name: "Seattle Cider Honey Crisp", price: 8.5, abv: "5.5%" },
@@ -29,11 +29,11 @@ const defaultBeers: BeerItem[] = [
 
   // Right column
   { name: "Boneyard RPM IPA", price: 8.5, abv: "6.5%" },
-  { name: "Busch Light", price: 6.5, abv: "4.1%" },
+  { name: "Busch Light", price: 5, abv: "4.1%" },
   { name: "Doghaus Brewery Double Dog Double IPA", price: 8.5, abv: "8%" },
-  { name: "Bale Breaker Dormancy Breakfast Stout", price: 8.5, abv: "6.8%" },
-  { name: "Backwoods Brewing Morning Stout", price: 8.5, abv: "5.5%" },
-  { name: "Fort George Vortex IPA", price: 8.5, abv: "7.2%" },
+  { name: "No-Li Squatch Series Juicy Hazy IPA", price: 8.5, abv: "9%" },
+  { name: "Belching Beaver Peanut Butter Stout", price: 8.5, abv: "5.3%" },
+  { name: "Schilling Moon Berries Cider", price: 8.5, abv: "5.2%" },
   { name: "Iron Goat Brewing Goatmeal Stout", price: 8.5, abv: "5.6%" },
   { name: "Crucible Brewing Pilsner", price: 8.5, abv: "5%" },
 ];
