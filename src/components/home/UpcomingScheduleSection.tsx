@@ -1,35 +1,27 @@
-import { Instagram } from "lucide-react";
-
-const WEEK = "Week of 12/15 to 12/21";
+const WEEK = "Week of 12/22 to 12/28";
 
 const schedule = [
   {
-    title: "Mon - Wed",
-    description: [{ text: "Happy Hour from 2pm to 5pm" }],
+    title: "Mon - Tues",
+    description: [{ text: "Open from 4pm - 9pm" }],
   },
   {
-    title: "Thursday, 18th",
+    title: "Wednesday 24th",
+    description: [{ text: "CLOSED" }],
+  },
+  {
+    title: "Thursday, 25th",
     description: [
-      { text: "Trades appreciation day! 5pm to 8pm" },
-      { text: "$2 OFF 16oz draft beer, cider & wine" },
+      { text: "CLOSED" },
+      { text: "Merry Christmas!" },
     ],
   },
   {
-    title: "Friday, 19th",
-    description: [
-      { text: "Live Music with Beau Warren at 7:30pm" },
-      { text: "@beauwarren.live", icon: <Instagram className="h-4 w-4 inline-block mr-1 text-[#E4405F]" /> },
-    ],
+    title: "Friday 26th",
+    description: [{ text: "Late Happy Hour 8pm to 10pm" }],
   },
   {
-    title: "Saturday, 20th",
-    description: [
-      { text: "Live Music with Jasper at 8pm" },
-      { text: "@diarrheawarning", icon: <Instagram className="h-4 w-4 inline-block mr-1 text-[#E4405F]" /> },
-    ],
-  },
-  {
-    title: "Sunday, 14th",
+    title: "Sunday, 28th",
     description: [{ text: "Dog Jersey Sunday!" }],
   },
 ];
