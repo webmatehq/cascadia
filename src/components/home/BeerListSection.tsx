@@ -1,47 +1,15 @@
 import { Beer, Percent, Wine } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useBeerList } from "@/context/BeerListContext";
+import { useContent } from "@/hooks/useContent";
+import type { WineCategory } from "@shared/content";
 
-type WineCategory = "Whites" | "Reds" | "Rosé" | "Wine Cocktails";
+const categories: WineCategory[] = ["Whites", "Rosé", "Reds", "Wine Cocktails"];
 
-interface WineItem {
-  name: string;
-  glass?: number; // price per glass
-  bottle?: number; // price per bottle
-  category: WineCategory;
-}
-
-const wines: WineItem[] = [
-  // Whites
-  { name: "Horan Estates Sauv Blanc", glass: 11, bottle: 30, category: "Whites" },
-  { name: "Malaga Springs Winery White Blend", glass: 13, bottle: 36, category: "Whites" },
-  { name: "Fielding Hills Chardonnay", glass: 14, bottle: 42, category: "Whites" },
-  { name: "Silver Bell Cab Blanc", glass: 12, bottle: 30, category: "Whites" },
-  { name: "Treveri Sparkling", bottle: 30, category: "Whites" },
-
-  // Rosé
-  { name: "Malaga Springs Winery Syrah Rosé", glass: 13, bottle: 36, category: "Rosé" },
-  { name: "Silver Bell Rosé", glass: 11, bottle: 30, category: "Rosé" },
-  { name: "Fielding Hills Rosé", glass: 14, bottle: 42, category: "Rosé" },
-
-  // Reds
-  { name: "Silver Bell Stormy", glass: 14, bottle: 42, category: "Reds" },
-  { name: "Silver Bell Cab Sauv", glass: 14, bottle: 44, category: "Reds" },
-  { name: "Fielding Hills Syrah", bottle: 60, category: "Reds" },
-  { name: "Fielding Hills 2 Glaciers", glass: 14, bottle: 42, category: "Reds" },
-  { name: "Silver Bell Malbec", glass: 15, bottle: 46, category: "Reds" },
-  { name: "Silver Bell Petit Verdot", glass: 14, bottle: 44, category: "Reds" },
-
-  // Wine Cocktails
-  { name: "Sangria", glass: 8, category: "Wine Cocktails" },
-  { name: "Margaritas", glass: 8, category: "Wine Cocktails" },
-  { name: "Buzzballs", glass: 5, category: "Wine Cocktails" },
-];
-
-const wineCategories: WineCategory[] = ["Whites", "Rosé", "Reds", "Wine Cocktails"];
 
 const BeerListSection = () => {
-  const { beers } = useBeerList();
+  const { data, isLoading, isError } = useContent();
+  const beers = data?.beers ?? [];
+  const wines = data?.wines ?? [];
 
   return (
     <section id="beerlist" className="bg-white py-16 px-4">
@@ -68,57 +36,83 @@ const BeerListSection = () => {
 
           <TabsContent value="beers">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-              {beers.map((beer, index) => (
-                <div
-                  key={index}
+              {isLoading ? (
+                <p className="text-gray-500 text-left">Actualizando lista...</p>
+              ) : isError ? (
+                <p className="text-red-500 text-left">
+                  No pudimos cargar el menú. Intenta nuevamente en unos minutos.
+                </p>
+              ) : beers.length === 0 ? (
+                <p className="text-gray-500 text-left">Todavía no hay cervezas publicadas.</p>
+              ) : (
+                beers.map((beer) => (
+                  <div
+                  key={beer.id}
                   className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm flex flex-col"
                 >
                   <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
                     <Beer className="w-5 h-5 text-[#D9A566]" />
                     {beer.name}
                   </h3>
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <Percent className="w-4 h-4 mr-1 text-[#D9A566]" />
-                    {beer.abv}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-gray-700 text-sm">
+                    <span className="flex items-center">
+                      <Percent className="w-4 h-4 mr-1 text-[#D9A566]" />
+                      {beer.abv}
+                    </span>
+                    {/* {typeof beer.price === "number" && (
+                      <span className="font-semibold text-gray-900">${beer.price.toFixed(2)}</span>
+                    )} */}
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="wines">
             <div className="text-left">
-              {wineCategories.map((category) => (
-                <div key={category} className="mb-8">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {wines
-                      .filter((w) => w.category === category)
-                      .map((wine, idx) => (
-                        <div
-                          key={`${category}-${idx}`}
-                          className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Wine className="w-4 h-4 text-[#D9A566]" />
-                            <p className="text-lg font-semibold text-gray-900">
-                              {wine.name}
-                            </p>
+              {isLoading && <p className="text-gray-500">Cargando vinos...</p>}
+              {isError && (
+                <p className="text-red-500">No pudimos cargar los vinos. Intenta más tarde.</p>
+              )}
+              {!isLoading &&
+                !isError &&
+                categories.map((category) => (
+                  <div key={category} className="mb-8">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-4">{category}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {wines
+                        .filter((w) => w.category === category)
+                        .map((wine) => (
+                          <div
+                            key={wine.id}
+                            className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                          >
+                            <div className="flex items-center gap-2 justify-between">
+                              <div className="flex items-center gap-2">
+                                <Wine className="w-4 h-4 text-[#D9A566]" />
+                                <p className="text-lg font-semibold text-gray-900">{wine.name}</p>
+                              </div>
+                              <div className="text-sm text-gray-700 space-y-1 text-right">
+                                {typeof wine.glass === "number" && (
+                                  <p>
+                                    <span className="font-semibold">${wine.glass.toFixed(2)}</span>{" "}
+                                    <span className="text-xs uppercase tracking-wide">Glass</span>
+                                  </p>
+                                )}
+                                {typeof wine.bottle === "number" && (
+                                  <p>
+                                    <span className="font-semibold">${wine.bottle.toFixed(2)}</span>{" "}
+                                    <span className="text-xs uppercase tracking-wide">Bottle</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          {(wine.glass || wine.bottle) && (
-                            <p className="text-sm text-gray-700 mt-1">
-                              {wine.glass ? `$${wine.glass} glass` : ""}
-                              {wine.glass && wine.bottle ? " / " : ""}
-                              {wine.bottle ? `$${wine.bottle} bottle` : ""}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </TabsContent>
         </Tabs>

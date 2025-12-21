@@ -3,14 +3,11 @@ import React from "react";
 import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
-import { BeerListProvider } from "./context/BeerListContext";
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
-      <BeerListProvider>
-        <App />
-      </BeerListProvider>
+      <App />
     </AuthProvider>
   </React.StrictMode>
 );

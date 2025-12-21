@@ -13,25 +13,6 @@ const EventsSection = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const eventSlides = [
     {
-      id: "christmas-wreath",
-      title: "Christmas Wreath Workshop",
-      subtitle: "Cascadia Tap House × Lilies of the Valley",
-      date: "Tuesday, December 3",
-      time: "6:00 PM",
-      location: "624 S Augustin Loop, East Wenatchee, WA",
-      price: "$65 per person",
-      bullets: [
-        "All art supplies provided",
-        "Includes one 16oz drink or glass of wine",
-        "Take home your handcrafted wreath",
-        "RSVP by 11/29 to andreavwuttke@gmail.com",
-      ],
-      background: "#F8FAF8",
-      border: "#CBD5BF",
-      textColor: "#123524",
-      icon: <Leaf className="w-4 h-4 text-[#4E8A4C] mr-2" />,
-    },
-    {
       id: "trades-appreciation",
       title: "Trades Appreciation Day",
       subtitle: "Thank you to the crews that keep Wenatchee building!",
@@ -87,24 +68,7 @@ const EventsSection = () => {
       textColor: "#7A1E48",
       icon: <Beer className="w-4 h-4 text-[#DB2777] mr-2" />,
     },
-    {
-      id: "thanksgiving-day",
-      title: "Thanksgiving Day at Cascadia",
-      subtitle: "Football, pie & relaxed sips before dinner",
-      date: "Thursday, November 27",
-      time: "1:30 PM – 9:00 PM",
-      location: "624 S Augustin Loop, East Wenatchee, WA",
-      price: "Free slice of pie (while supplies last)",
-      bullets: [
-        "Happy Hour pricing on 16oz draft beer & cider",
-        "Football on every screen",
-        "Bring the family for cozy fall vibes",
-      ],
-      background: "#FFF5E6",
-      border: "#F7CBA0",
-      textColor: "#7A3416",
-      icon: <Gift className="w-4 h-4 text-[#C05621] mr-2" />,
-    },
+
   ];
 
   useEffect(() => {

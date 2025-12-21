@@ -35,5 +35,13 @@ export default defineConfig(async () => {
   return {
     plugins,
     ...baseConfig,
+    server: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:5001",
+          changeOrigin: true,
+        },
+      },
+    },
   };
 });

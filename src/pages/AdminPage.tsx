@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useBeerList, type BeerItem } from "@/context/BeerListContext";
+import { useContent } from "@/hooks/useContent";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { BeerItem, WineItem, WineCategory, EventItem } from "@shared/content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -21,21 +26,116 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 
+type BeerFormState = { id: string | null; name: string; abv: string; price: string };
+type WineFormState = {
+  id: string | null;
+  name: string;
+  category: WineCategory;
+  glass: string;
+  bottle: string;
+};
+type EventFormState = {
+  id: string | null;
+  title: string;
+  description: string;
+  tagline: string;
+  date: string;
+  time: string;
+  location: string;
+  highlights: string;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+};
+
+const initialBeerForm: BeerFormState = { id: null, name: "", abv: "", price: "" };
+const initialWineForm: WineFormState = { id: null, name: "", category: "Whites", glass: "", bottle: "" };
+const initialEventForm: EventFormState = {
+  id: null,
+  title: "",
+  description: "",
+  tagline: "",
+  date: "",
+  time: "",
+  location: "",
+  highlights: "",
+  backgroundColor: "",
+  borderColor: "",
+  textColor: "",
+};
+
+const COLOR_FALLBACKS = {
+  background: "#F5F5F5",
+  border: "#E5E5E5",
+  text: "#1F2937",
+};
+
+const parseHighlightsInput = (value: string) =>
+  value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+const getColorInputValue = (value: string, fallback: string) =>
+  value && /^#[0-9A-Fa-f]{3,6}$/i.test(value) ? value : fallback;
+
 const AdminPage = () => {
   const { isAuthenticated, login, logout } = useAuth();
-  const { beers, addBeer, updateBeer, removeBeer, resetBeers } = useBeerList();
+  const { data, isLoading, isError, refetch } = useContent();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formError, setFormError] = useState("");
-  const [formState, setFormState] = useState({
-    name: "",
-    abv: "",
-    price: "",
-  });
+  const [beerForm, setBeerForm] = useState<BeerFormState>(initialBeerForm);
+  const [beerError, setBeerError] = useState("");
+
+  const [wineForm, setWineForm] = useState<WineFormState>(initialWineForm);
+  const [wineError, setWineError] = useState("");
+
+  const [eventForm, setEventForm] = useState<EventFormState>(initialEventForm);
+  const [eventError, setEventError] = useState("");
+
+  const beers = data?.beers ?? [];
+  const wines = data?.wines ?? [];
+  const events = data?.events ?? [];
+  const highlightPreview = parseHighlightsInput(eventForm.highlights);
+  const beerFormRef = useRef<HTMLFormElement>(null);
+  const wineFormRef = useRef<HTMLFormElement>(null);
+  const eventFormRef = useRef<HTMLFormElement>(null);
+
+  const isPending = (action: string) => pendingAction === action;
+
+  const runAction = async (
+    action: string,
+    method: string,
+    url: string,
+    payload?: unknown,
+    successMessage?: string
+  ) => {
+    setPendingAction(action);
+    try {
+      await apiRequest(method, url, payload);
+      await queryClient.invalidateQueries({ queryKey: ["/api/content"] });
+      if (successMessage) {
+        toast({ title: successMessage });
+      }
+      return true;
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error al guardar",
+        description: "Ocurrió un problema al intentar guardar los cambios. Intenta otra vez.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,52 +149,218 @@ const AdminPage = () => {
     setPassword("");
   };
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleBeerSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!formState.name.trim() || !formState.abv.trim()) {
-      setFormError("Completa el nombre y el porcentaje de alcohol.");
+    if (!beerForm.name.trim() || !beerForm.abv.trim()) {
+      setBeerError("Completa el nombre y el ABV.");
       return;
     }
-
-    const price = formState.price.trim();
-    const beer: BeerItem = {
-      name: formState.name.trim(),
-      abv: formState.abv.trim(),
-      price: price ? Number(price) : undefined,
+    const priceValue = beerForm.price.trim();
+    if (!priceValue) {
+      setBeerError("El precio es obligatorio.");
+      return;
+    }
+    const price = Number(priceValue);
+    if (Number.isNaN(price)) {
+      setBeerError("El precio debe ser un número válido.");
+      return;
+    }
+    setBeerError("");
+    const payload = {
+      name: beerForm.name.trim(),
+      abv: beerForm.abv.trim(),
+      price,
     };
-
-    if (Number.isNaN(beer.price)) {
-      setFormError("El precio debe ser un número válido.");
-      return;
+    const action = beerForm.id ? "update-beer" : "create-beer";
+    const method = beerForm.id ? "PUT" : "POST";
+    const url = beerForm.id ? `/api/admin/beers/${beerForm.id}` : "/api/admin/beers";
+    const success = await runAction(action, method, url, payload, "Lista de cervezas actualizada");
+    if (success) {
+      setBeerForm(initialBeerForm);
     }
-
-    if (editingIndex !== null) {
-      updateBeer(editingIndex, beer);
-    } else {
-      addBeer(beer);
-    }
-
-    setFormError("");
-    setEditingIndex(null);
-    setFormState({ name: "", abv: "", price: "" });
   };
 
-  const handleEdit = (index: number) => {
-    const beer = beers[index];
-    setEditingIndex(index);
-    setFormState({
+  const handleWineSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!wineForm.name.trim()) {
+      setWineError("El nombre es obligatorio.");
+      return;
+    }
+    const glassValue = wineForm.glass.trim();
+    const bottleValue = wineForm.bottle.trim();
+    const glass = glassValue ? Number(glassValue) : undefined;
+    const bottle = bottleValue ? Number(bottleValue) : undefined;
+    if ((glassValue && Number.isNaN(glass)) || (bottleValue && Number.isNaN(bottle))) {
+      setWineError("Los precios deben ser números válidos.");
+      return;
+    }
+    setWineError("");
+    const payload = {
+      name: wineForm.name.trim(),
+      category: wineForm.category,
+      glass,
+      bottle,
+    };
+    const action = wineForm.id ? "update-wine" : "create-wine";
+    const method = wineForm.id ? "PUT" : "POST";
+    const url = wineForm.id ? `/api/admin/wines/${wineForm.id}` : "/api/admin/wines";
+    const success = await runAction(action, method, url, payload, "Lista de vinos actualizada");
+    if (success) {
+      setWineForm(initialWineForm);
+    }
+  };
+
+  const handleEventSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!eventForm.title.trim() || !eventForm.date.trim() || !eventForm.location.trim()) {
+      setEventError("Completa el título, la fecha y la ubicación.");
+      return;
+    }
+    const highlights = highlightPreview;
+    setEventError("");
+    const payload = {
+      title: eventForm.title.trim(),
+      description: eventForm.description.trim() || undefined,
+      tagline: eventForm.tagline.trim() || undefined,
+      date: eventForm.date.trim(),
+      time: eventForm.time.trim() || undefined,
+      location: eventForm.location.trim(),
+      highlights,
+      backgroundColor: eventForm.backgroundColor.trim() || undefined,
+      borderColor: eventForm.borderColor.trim() || undefined,
+      textColor: eventForm.textColor.trim() || undefined,
+    };
+    const action = eventForm.id ? "update-event" : "create-event";
+    const method = eventForm.id ? "PUT" : "POST";
+    const url = eventForm.id ? `/api/admin/events/${eventForm.id}` : "/api/admin/events";
+    const success = await runAction(action, method, url, payload, "Eventos actualizados");
+    if (success) {
+      setEventForm(initialEventForm);
+    }
+  };
+
+  const scrollToSection = (ref: RefObject<HTMLFormElement>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleColorChange = (
+    field: "backgroundColor" | "borderColor" | "textColor",
+    value: string
+  ) => {
+    setEventForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const renderColorPicker = (
+    label: string,
+    field: "backgroundColor" | "borderColor" | "textColor",
+    fallback: string
+  ) => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          value={getColorInputValue(eventForm[field], fallback)}
+          onChange={(event) => handleColorChange(field, event.target.value)}
+          className="h-10 w-14 cursor-pointer rounded border border-input bg-transparent p-0"
+        />
+        <span className="text-sm font-mono text-gray-600">
+          {eventForm[field] || "Automático"}
+        </span>
+        {eventForm[field] && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleColorChange(field, "")}
+            className="text-muted-foreground"
+          >
+            Limpiar
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  const handleBeerEdit = (beer: BeerItem) => {
+    setBeerForm({
+      id: beer.id,
       name: beer.name,
       abv: beer.abv,
       price: beer.price?.toString() ?? "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToSection(beerFormRef);
   };
 
-  const handleReset = () => {
-    resetBeers();
-    setEditingIndex(null);
-    setFormState({ name: "", abv: "", price: "" });
+  const handleWineEdit = (wine: WineItem) => {
+    setWineForm({
+      id: wine.id,
+      name: wine.name,
+      category: wine.category,
+      glass: wine.glass?.toString() ?? "",
+      bottle: wine.bottle?.toString() ?? "",
+    });
+    scrollToSection(wineFormRef);
+  };
+
+  const handleEventEdit = (eventItem: EventItem) => {
+    setEventForm({
+      id: eventItem.id,
+      title: eventItem.title,
+      description: eventItem.description ?? "",
+      tagline: eventItem.tagline ?? "",
+      date: eventItem.date,
+      time: eventItem.time ?? "",
+      location: eventItem.location,
+      highlights: eventItem.highlights.join("\n"),
+      backgroundColor: eventItem.backgroundColor ?? "",
+      borderColor: eventItem.borderColor ?? "",
+      textColor: eventItem.textColor ?? "",
+    });
+    scrollToSection(eventFormRef);
+  };
+
+  const handleDeleteBeer = async (id: string) => {
+    if (!confirm("¿Seguro que deseas eliminar esta cerveza?")) return;
+    await runAction(`delete-beer-${id}`, "DELETE", `/api/admin/beers/${id}`, undefined, "Cerveza eliminada");
+    if (beerForm.id === id) {
+      setBeerForm(initialBeerForm);
+    }
+  };
+
+  const handleDeleteWine = async (id: string) => {
+    if (!confirm("¿Seguro que deseas eliminar este vino?")) return;
+    await runAction(`delete-wine-${id}`, "DELETE", `/api/admin/wines/${id}`, undefined, "Vino eliminado");
+    if (wineForm.id === id) {
+      setWineForm(initialWineForm);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm("¿Seguro que deseas eliminar este evento?")) return;
+    await runAction(`delete-event-${id}`, "DELETE", `/api/admin/events/${id}`, undefined, "Evento eliminado");
+    if (eventForm.id === id) {
+      setEventForm(initialEventForm);
+    }
+  };
+
+  const handleResetBeers = async () => {
+    await runAction("reset-beers", "POST", "/api/admin/beers/reset", undefined, "Lista de cervezas restaurada");
+    setBeerForm(initialBeerForm);
+  };
+
+  const handleResetWines = async () => {
+    await runAction("reset-wines", "POST", "/api/admin/wines/reset", undefined, "Lista de vinos restaurada");
+    setWineForm(initialWineForm);
+  };
+
+  const handleResetEvents = async () => {
+    await runAction("reset-events", "POST", "/api/admin/events/reset", undefined, "Eventos restaurados");
+    setEventForm(initialEventForm);
   };
 
   if (!isAuthenticated) {
@@ -103,7 +369,7 @@ const AdminPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Panel administrativo</CardTitle>
-            <CardDescription>Ingresa para actualizar la lista de cervezas.</CardDescription>
+            <CardDescription>Ingresa para actualizar el contenido.</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleLogin}>
@@ -138,41 +404,66 @@ const AdminPage = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <section className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+        <Card>
+          <CardContent className="p-8">
+            <p className="text-lg text-slate-700">Cargando el contenido actual...</p>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader>
+            <CardTitle>No pudimos cargar los datos</CardTitle>
+            <CardDescription>Revisa tu conexión e intenta nuevamente.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => refetch()} className="w-full">
+              Reintentar
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
+
   return (
     <section className="min-h-screen bg-slate-100 py-16 px-4">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-900">Administrador de cervezas</h1>
-            <p className="text-slate-600">
-              Añade, edita o elimina cervezas en tiempo real para la página principal.
-            </p>
+            <h1 className="text-3xl font-semibold text-slate-900">Panel administrativo</h1>
+            <p className="text-slate-600">Gestiona cervezas, vinos y eventos en un solo lugar.</p>
           </div>
           <Button variant="outline" onClick={logout}>
             Cerrar sesión
           </Button>
         </div>
 
+        {/* Beer management */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <Plus className="h-5 w-5 text-[#D9A566]" />
-              {editingIndex !== null ? "Editar cerveza" : "Agregar nueva cerveza"}
+              {beerForm.id ? "Editar cerveza" : "Agregar nueva cerveza"}
             </CardTitle>
-            <CardDescription>
-              Completa los datos y presiona guardar para {editingIndex !== null ? "actualizar" : "añadir"} la cerveza.
-            </CardDescription>
+            <CardDescription>Actualiza la rotación de cervezas en minutos.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="grid gap-4 md:grid-cols-3" onSubmit={handleFormSubmit}>
+            <form ref={beerFormRef} className="grid gap-4 md:grid-cols-3" onSubmit={handleBeerSubmit}>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="beer-name">Nombre</Label>
                 <Input
                   id="beer-name"
-                  value={formState.name}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, name: event.target.value }))
-                  }
+                  value={beerForm.name}
+                  onChange={(event) => setBeerForm((prev) => ({ ...prev, name: event.target.value }))}
                   placeholder="Ej. Bale Breaker..."
                   required
                 />
@@ -181,10 +472,8 @@ const AdminPage = () => {
                 <Label htmlFor="beer-abv">ABV</Label>
                 <Input
                   id="beer-abv"
-                  value={formState.abv}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, abv: event.target.value }))
-                  }
+                  value={beerForm.abv}
+                  onChange={(event) => setBeerForm((prev) => ({ ...prev, abv: event.target.value }))}
                   placeholder="Ej. 6.5%"
                   required
                 />
@@ -193,28 +482,23 @@ const AdminPage = () => {
                 <Label htmlFor="beer-price">Precio</Label>
                 <Input
                   id="beer-price"
-                  value={formState.price}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, price: event.target.value }))
-                  }
+                  value={beerForm.price}
+                  onChange={(event) => setBeerForm((prev) => ({ ...prev, price: event.target.value }))}
                   placeholder="Ej. 8.5"
                 />
               </div>
-              {formError && (
-                <p className="text-sm text-red-500 md:col-span-3">{formError}</p>
-              )}
+              {beerError && <p className="text-sm text-red-500 md:col-span-3">{beerError}</p>}
               <div className="flex gap-3 md:col-span-3">
-                <Button type="submit">
-                  {editingIndex !== null ? "Guardar cambios" : "Agregar cerveza"}
+                <Button type="submit" disabled={isPending("create-beer") || isPending("update-beer")}>
+                  {beerForm.id ? "Guardar cambios" : "Agregar cerveza"}
                 </Button>
-                {editingIndex !== null && (
+                {beerForm.id && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      setEditingIndex(null);
-                      setFormState({ name: "", abv: "", price: "" });
-                      setFormError("");
+                      setBeerForm(initialBeerForm);
+                      setBeerError("");
                     }}
                   >
                     Cancelar
@@ -228,10 +512,16 @@ const AdminPage = () => {
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Listado actual ({beers.length})</CardTitle>
-              <CardDescription>Los cambios se reflejan de inmediato en la página de inicio.</CardDescription>
+              <CardTitle>Listado de cervezas ({beers.length})</CardTitle>
+              <CardDescription>Los cambios se reflejan de inmediato en la página principal.</CardDescription>
             </div>
-            <Button type="button" variant="outline" onClick={handleReset} className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetBeers}
+              className="gap-2"
+              disabled={isPending("reset-beers")}
+            >
               <RefreshCw className="h-4 w-4" />
               Restaurar lista original
             </Button>
@@ -250,8 +540,8 @@ const AdminPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {beers.map((beer, index) => (
-                    <TableRow key={`${beer.name}-${index}`}>
+                  {beers.map((beer) => (
+                    <TableRow key={beer.id}>
                       <TableCell className="font-medium">{beer.name}</TableCell>
                       <TableCell>{beer.abv}</TableCell>
                       <TableCell>
@@ -261,7 +551,7 @@ const AdminPage = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(index)}
+                          onClick={() => handleBeerEdit(beer)}
                           aria-label={`Editar ${beer.name}`}
                         >
                           <Pencil className="h-4 w-4" />
@@ -269,8 +559,9 @@ const AdminPage = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeBeer(index)}
+                          onClick={() => handleDeleteBeer(beer.id)}
                           aria-label={`Eliminar ${beer.name}`}
+                          disabled={isPending(`delete-beer-${beer.id}`)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -279,6 +570,346 @@ const AdminPage = () => {
                   ))}
                 </TableBody>
               </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Wine management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <Plus className="h-5 w-5 text-[#D9A566]" />
+              {wineForm.id ? "Editar vino" : "Agregar vino"}
+            </CardTitle>
+            <CardDescription>Mantén actualizada la selección de botellas y copas.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form ref={wineFormRef} className="grid gap-4 md:grid-cols-2" onSubmit={handleWineSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="wine-name">Nombre</Label>
+                <Input
+                  id="wine-name"
+                  value={wineForm.name}
+                  onChange={(event) => setWineForm((prev) => ({ ...prev, name: event.target.value }))}
+                  placeholder="Ej. Silver Bell Sauv Blanc"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wine-category">Categoría</Label>
+                <select
+                  id="wine-category"
+                  value={wineForm.category}
+                  onChange={(event) =>
+                    setWineForm((prev) => ({ ...prev, category: event.target.value as WineCategory }))
+                  }
+                  className="border border-input bg-background px-3 py-2 rounded-md text-sm"
+                >
+                  <option value="Whites">Whites</option>
+                  <option value="Rosé">Rosé</option>
+                  <option value="Reds">Reds</option>
+                  <option value="Wine Cocktails">Wine Cocktails</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wine-glass">Precio por copa</Label>
+                <Input
+                  id="wine-glass"
+                  value={wineForm.glass}
+                  onChange={(event) => setWineForm((prev) => ({ ...prev, glass: event.target.value }))}
+                  placeholder="Ej. 12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wine-bottle">Precio botella</Label>
+                <Input
+                  id="wine-bottle"
+                  value={wineForm.bottle}
+                  onChange={(event) => setWineForm((prev) => ({ ...prev, bottle: event.target.value }))}
+                  placeholder="Ej. 30"
+                />
+              </div>
+              {wineError && <p className="text-sm text-red-500 md:col-span-2">{wineError}</p>}
+              <div className="flex gap-3 md:col-span-2">
+                <Button type="submit" disabled={isPending("create-wine") || isPending("update-wine")}>
+                  {wineForm.id ? "Guardar vino" : "Agregar vino"}
+                </Button>
+                {wineForm.id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setWineForm(initialWineForm);
+                      setWineError("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Vinos disponibles ({wines.length})</CardTitle>
+              <CardDescription>Organiza por categoría y precios.</CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetWines}
+              className="gap-2"
+              disabled={isPending("reset-wines")}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Restaurar vinos originales
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {wines.length === 0 ? (
+              <p className="text-sm text-slate-600">No hay vinos registrados.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Copa</TableHead>
+                    <TableHead>Botella</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {wines.map((wine) => (
+                    <TableRow key={wine.id}>
+                      <TableCell className="font-medium">{wine.name}</TableCell>
+                      <TableCell>{wine.category}</TableCell>
+                      <TableCell>
+                        {typeof wine.glass === "number" ? `$${wine.glass.toFixed(2)}` : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {typeof wine.bottle === "number" ? `$${wine.bottle.toFixed(2)}` : "—"}
+                      </TableCell>
+                      <TableCell className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleWineEdit(wine)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteWine(wine.id)}
+                          disabled={isPending(`delete-wine-${wine.id}`)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Events management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <Plus className="h-5 w-5 text-[#D9A566]" />
+              {eventForm.id ? "Editar evento" : "Agregar evento"}
+            </CardTitle>
+            <CardDescription>Publica tus activaciones y actividades especiales.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form ref={eventFormRef} className="grid gap-4" onSubmit={handleEventSubmit}>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="event-title">Título</Label>
+                  <Input
+                    id="event-title"
+                    value={eventForm.title}
+                    onChange={(event) => setEventForm((prev) => ({ ...prev, title: event.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="event-tagline">Tagline</Label>
+                  <Input
+                    id="event-tagline"
+                    value={eventForm.tagline}
+                    onChange={(event) => setEventForm((prev) => ({ ...prev, tagline: event.target.value }))}
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="event-date">Fecha</Label>
+                  <Input
+                    id="event-date"
+                    value={eventForm.date}
+                    onChange={(event) => setEventForm((prev) => ({ ...prev, date: event.target.value }))}
+                    placeholder="Ej. Saturday, October 25th"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="event-time">Horario</Label>
+                  <Input
+                    id="event-time"
+                    value={eventForm.time}
+                    onChange={(event) => setEventForm((prev) => ({ ...prev, time: event.target.value }))}
+                    placeholder="Ej. Noon – 4 PM"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-location">Ubicación</Label>
+                <Input
+                  id="event-location"
+                  value={eventForm.location}
+                  onChange={(event) => setEventForm((prev) => ({ ...prev, location: event.target.value }))}
+                  placeholder="Dirección o descripción corta"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-description">Descripción</Label>
+                <Textarea
+                  id="event-description"
+                  value={eventForm.description}
+                  onChange={(event) => setEventForm((prev) => ({ ...prev, description: event.target.value }))}
+                  placeholder="Texto introductorio opcional"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-highlights">Highlights (uno por línea)</Label>
+                <Textarea
+                  id="event-highlights"
+                  value={eventForm.highlights}
+                  onChange={(event) => setEventForm((prev) => ({ ...prev, highlights: event.target.value }))}
+                  placeholder="Premios, actividades, promociones..."
+                />
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {renderColorPicker("Color de fondo", "backgroundColor", COLOR_FALLBACKS.background)}
+                {renderColorPicker("Color del borde", "borderColor", COLOR_FALLBACKS.border)}
+                {renderColorPicker("Color del texto", "textColor", COLOR_FALLBACKS.text)}
+              </div>
+              {eventError && <p className="text-sm text-red-500">{eventError}</p>}
+              <div className="flex gap-3">
+                <Button type="submit" disabled={isPending("create-event") || isPending("update-event")}>
+                  {eventForm.id ? "Guardar evento" : "Agregar evento"}
+                </Button>
+                {eventForm.id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEventForm(initialEventForm);
+                      setEventError("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Eventos publicados ({events.length})</CardTitle>
+              <CardDescription>Estos eventos se muestran en el carrusel de la página principal.</CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetEvents}
+              className="gap-2"
+              disabled={isPending("reset-events")}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Restaurar eventos originales
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {events.length === 0 ? (
+              <p className="text-sm text-slate-600">Todavía no hay eventos.</p>
+            ) : (
+              <div className="grid gap-4">
+                {events.map((eventItem) => {
+                  const isEditingThisEvent = eventForm.id === eventItem.id;
+                  const previewHighlights = isEditingThisEvent ? highlightPreview : eventItem.highlights;
+                  const previewBackground = isEditingThisEvent
+                    ? eventForm.backgroundColor || eventItem.backgroundColor || COLOR_FALLBACKS.background
+                    : eventItem.backgroundColor ?? COLOR_FALLBACKS.background;
+                  const previewBorder = isEditingThisEvent
+                    ? eventForm.borderColor || eventItem.borderColor || COLOR_FALLBACKS.border
+                    : eventItem.borderColor ?? COLOR_FALLBACKS.border;
+                  const previewText = isEditingThisEvent
+                    ? eventForm.textColor || eventItem.textColor || COLOR_FALLBACKS.text
+                    : eventItem.textColor ?? COLOR_FALLBACKS.text;
+                  const previewTitle = isEditingThisEvent ? eventForm.title || eventItem.title : eventItem.title;
+                  const previewTagline = isEditingThisEvent ? eventForm.tagline : eventItem.tagline;
+                  const previewDescription = isEditingThisEvent ? eventForm.description : eventItem.description;
+                  const previewDate = isEditingThisEvent ? eventForm.date : eventItem.date;
+                  const previewTime = isEditingThisEvent ? eventForm.time : eventItem.time;
+                  const previewLocation = isEditingThisEvent ? eventForm.location : eventItem.location;
+
+                  return (
+                    <div
+                      key={eventItem.id}
+                      className="border rounded-lg p-4 flex flex-col gap-2 bg-white"
+                      style={{
+                        borderColor: previewBorder,
+                        background: previewBackground,
+                        color: previewText,
+                      }}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm uppercase tracking-wide opacity-80">{previewDate}</p>
+                        <h3 className="text-xl font-semibold">{previewTitle}</h3>
+                        {previewTagline && (
+                          <p className="text-sm italic opacity-80">{previewTagline}</p>
+                        )}
+                        {previewDescription && (
+                          <p className="text-sm opacity-80">{previewDescription}</p>
+                        )}
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-medium">{previewLocation}</p>
+                        {previewTime && <p>{previewTime}</p>}
+                      </div>
+                      {previewHighlights.length > 0 && (
+                        <ul className="list-disc list-inside text-sm opacity-90">
+                          {previewHighlights.map((highlight, idx) => (
+                            <li key={`${eventItem.id}-summary-${idx}`}>{highlight}</li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="flex gap-2 self-end">
+                        <Button variant="ghost" size="sm" onClick={() => handleEventEdit(eventItem)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteEvent(eventItem.id)}
+                          disabled={isPending(`delete-event-${eventItem.id}`)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
