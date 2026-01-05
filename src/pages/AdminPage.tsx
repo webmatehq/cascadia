@@ -98,10 +98,18 @@ const AdminPage = () => {
 
   const [eventForm, setEventForm] = useState<EventFormState>(initialEventForm);
   const [eventError, setEventError] = useState("");
+  const [menuFile, setMenuFile] = useState<File | null>(null);
+  const [menuUploadError, setMenuUploadError] = useState("");
+  const [isUploadingMenu, setIsUploadingMenu] = useState(false);
 
   const beers = data?.beers ?? [];
   const wines = data?.wines ?? [];
   const events = data?.events ?? [];
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+  const menuPublicUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/cascadia/menu/cascadia-menu.pdf`
+    : "";
   const highlightPreview = parseHighlightsInput(eventForm.highlights);
   const beerFormRef = useRef<HTMLFormElement>(null);
   const wineFormRef = useRef<HTMLFormElement>(null);
@@ -361,6 +369,53 @@ const AdminPage = () => {
   const handleResetEvents = async () => {
     await runAction("reset-events", "POST", "/api/admin/events/reset", undefined, "Eventos restaurados");
     setEventForm(initialEventForm);
+  };
+
+  const handleMenuUpload = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!menuFile) {
+      setMenuUploadError("Selecciona un PDF antes de subirlo.");
+      return;
+    }
+    if (menuFile.type !== "application/pdf") {
+      setMenuUploadError("El archivo debe ser un PDF.");
+      return;
+    }
+    if (!supabaseUrl || !supabaseKey) {
+      setMenuUploadError("Faltan las credenciales de Supabase en el entorno.");
+      return;
+    }
+
+    setMenuUploadError("");
+    setIsUploadingMenu(true);
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/storage/v1/object/cascadia/menu/cascadia-menu.pdf`,
+        {
+          method: "POST",
+          headers: {
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
+            "Content-Type": "application/pdf",
+            "x-upsert": "true",
+          },
+          body: menuFile,
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody?.message ?? "No se pudo subir el PDF.");
+      }
+
+      toast({ title: "Menú actualizado", description: "El PDF fue reemplazado correctamente." });
+      setMenuFile(null);
+    } catch (error) {
+      console.error(error);
+      setMenuUploadError("Ocurrió un error al subir el menú. Intenta otra vez.");
+    } finally {
+      setIsUploadingMenu(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -910,6 +965,54 @@ const AdminPage = () => {
                   );
                 })}
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Subir menú en PDF</CardTitle>
+            <CardDescription>
+              Reemplaza el archivo existente en Supabase Storage con el nuevo menú.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={handleMenuUpload}>
+              <div className="space-y-2">
+                <Label htmlFor="menu-pdf">Archivo PDF</Label>
+                <Input
+                  id="menu-pdf"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setMenuFile(file);
+                    setMenuUploadError("");
+                  }}
+                />
+                {menuFile && (
+                  <p className="text-sm text-slate-600">Seleccionado: {menuFile.name}</p>
+                )}
+              </div>
+              <div className="flex items-end">
+                <Button type="submit" disabled={isUploadingMenu}>
+                  {isUploadingMenu ? "Subiendo..." : "Subir y reemplazar"}
+                </Button>
+              </div>
+              {menuUploadError && <p className="text-sm text-red-500 md:col-span-2">{menuUploadError}</p>}
+            </form>
+            {menuPublicUrl && (
+              <p className="text-sm text-slate-600 mt-4">
+                URL pública actual:{" "}
+                <a
+                  href={menuPublicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  {menuPublicUrl}
+                </a>
+              </p>
             )}
           </CardContent>
         </Card>
