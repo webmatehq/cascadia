@@ -106,9 +106,8 @@ const AdminPage = () => {
   const wines = data?.wines ?? [];
   const events = data?.events ?? [];
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
   const menuPublicUrl = supabaseUrl
-    ? `${supabaseUrl}/storage/v1/object/public/cascadia/menu/cascadia-menu.pdf`
+    ? `${supabaseUrl}/storage/v1/object/public/Cascadia/Menu/cascadia-menu.pdf`
     : "";
   const highlightPreview = parseHighlightsInput(eventForm.highlights);
   const beerFormRef = useRef<HTMLFormElement>(null);
@@ -381,27 +380,16 @@ const AdminPage = () => {
       setMenuUploadError("El archivo debe ser un PDF.");
       return;
     }
-    if (!supabaseUrl || !supabaseKey) {
-      setMenuUploadError("Faltan las credenciales de Supabase en el entorno.");
-      return;
-    }
-
     setMenuUploadError("");
     setIsUploadingMenu(true);
     try {
-      const response = await fetch(
-        `${supabaseUrl}/storage/v1/object/cascadia/menu/cascadia-menu.pdf`,
-        {
-          method: "POST",
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": "application/pdf",
-            "x-upsert": "true",
-          },
-          body: menuFile,
-        }
-      );
+      const response = await fetch("/api/admin/menu-upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+        body: menuFile,
+      });
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
@@ -769,7 +757,7 @@ const AdminPage = () => {
           </CardContent>
         </Card>
 
-        {/* Events management */}
+        {/* Events management
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
@@ -968,6 +956,7 @@ const AdminPage = () => {
             )}
           </CardContent>
         </Card>
+        */}
 
         <Card>
           <CardHeader>

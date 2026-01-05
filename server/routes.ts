@@ -1,4 +1,4 @@
-import { type Express, type Response } from "express";
+import express, { type Express, type Response } from "express";
 import { ZodError } from "zod";
 import { contactFormSchema, insertContactMessageSchema } from "@shared/schema";
 import {
@@ -37,6 +37,56 @@ const handleError = (error: unknown, res: Response) => {
 };
 
 export function registerRoutes(app: Express) {
+  app.post(
+    "/api/admin/menu-upload",
+    express.raw({ type: "application/pdf", limit: "15mb" }),
+    async (req, res) => {
+      try {
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!supabaseUrl || !supabaseServiceKey) {
+          return res.status(500).json({
+            success: false,
+            message: "Faltan credenciales de Supabase en el servidor.",
+          });
+        }
+
+        if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "El PDF está vacío o no se recibió correctamente.",
+          });
+        }
+
+        const uploadResponse = await fetch(
+          `${supabaseUrl}/storage/v1/object/Cascadia/Menu/cascadia-menu.pdf`,
+          {
+            method: "POST",
+            headers: {
+              apikey: supabaseServiceKey,
+              Authorization: `Bearer ${supabaseServiceKey}`,
+              "Content-Type": "application/pdf",
+              "x-upsert": "true",
+            },
+            body: req.body,
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text().catch(() => "");
+          return res.status(uploadResponse.status).json({
+            success: false,
+            message: errorText || "No se pudo subir el PDF.",
+          });
+        }
+
+        return res.status(200).json({ success: true });
+      } catch (error) {
+        handleError(error, res);
+      }
+    }
+  );
+
   app.get("/api/content", async (_req, res) => {
     try {
       const content = await getContent();
