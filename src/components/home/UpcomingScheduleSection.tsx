@@ -1,28 +1,29 @@
-const WEEK = "Week of 12/22 to 12/28";
+const WEEK = "Week of 1/5 to 1/11";
 
 const schedule = [
   {
-    title: "Mon - Tues",
-    description: [{ text: "Open from 4pm - 9pm" }],
+    title: "Mon - Thursday",
+    description: [{ text: "Raffle tickets for Mariners game" }],
   },
   {
-    title: "Wednesday 24th",
-    description: [{ text: "CLOSED" }],
+    title: "Thursday, 1st",
+    description: [{ text: "First Responders and healthcare Appreciation Day 5pm-8pm" }],
   },
   {
-    title: "Thursday, 25th",
+    title: "Friday, 9th",
     description: [
-      { text: "CLOSED" },
-      { text: "Merry Christmas!" },
+      { text: "Live music with Hans Joseph 8pm" },
+      { text: "@hansjoseph_" },
+      { text: "Pizza pop up with @valleypizzajoint" },
     ],
   },
   {
-    title: "Friday 26th",
-    description: [{ text: "Late Happy Hour 8pm to 10pm" }],
+    title: "Saturday, 10th",
+    description: [{ text: "NFL Playoffs" }],
   },
   {
-    title: "Sunday, 28th",
-    description: [{ text: "Dog Jersey Sunday!" }],
+    title: "Sunday, 4th",
+    description: [{ text: "NFL Playoffs" }],
   },
 ];
 
