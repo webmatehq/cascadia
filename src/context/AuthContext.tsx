@@ -7,7 +7,7 @@ interface AuthContextValue {
 }
 
 const ADMIN_EMAIL = "andreawuttke";
-const ADMIN_PASSWORD = "  ";
+const ADMIN_PASSWORD = "adminCascadia33!";
 const STORAGE_KEY = "cascadia.admin.authenticated";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
