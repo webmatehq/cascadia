@@ -1,28 +1,33 @@
-const WEEK = "Week of 1/5 to 1/11";
+const WEEK = "Week of 1/12 to 1/18";
 
 const schedule = [
   {
-    title: "Mon - Thursday",
-    description: [{ text: "Raffle tickets for Mariners game" }],
+    title: "Sun - Thurs",
+    description: [{ text: "Raffle tickets for Mariners game with each 16oz draft pour" }],
   },
   {
-    title: "Thursday, 1st",
-    description: [{ text: "First Responders and healthcare Appreciation Day 5pm-8pm" }],
-  },
-  {
-    title: "Friday, 9th",
+    title: "Thursday, 15th",
     description: [
-      { text: "Live music with Hans Joseph 8pm" },
-      { text: "@hansjoseph_" },
-      { text: "Pizza pop up with @valleypizzajoint" },
+      { text: "Trades Appreciation Day 5pm-8pm" },
+      { text: "Food truck on site" },
+      { text: "@dirtyapronfood" },
     ],
   },
   {
-    title: "Saturday, 10th",
-    description: [{ text: "NFL Playoffs" }],
+    title: "Friday, 16th",
+    description: [
+      { text: "Latin Night at 9pm with @whois_jg" },
+      { text: "DJ Trippy Kitty" },
+      { text: "Food truck on site" },
+      { text: "@dirtyapronfood" },
+    ],
   },
   {
-    title: "Sunday, 4th",
+    title: "Saturday, 17th",
+    description: [{ text: "NFL Playoffs" }, { text: "Food truck on site" }, { text: "@dirtyapronfood" }],
+  },
+  {
+    title: "Sunday, 18th",
     description: [{ text: "NFL Playoffs" }],
   },
 ];
