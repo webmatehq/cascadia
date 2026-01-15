@@ -47,10 +47,37 @@ export const eventItemSchema = eventInputSchema.extend({
 });
 export type EventItem = z.infer<typeof eventItemSchema>;
 
+export const upcomingScheduleItemInputSchema = z.object({
+  title: z.string().min(1, "El título es obligatorio"),
+  lines: z.array(z.string().min(1)).default([]),
+  sortOrder: z.number().int().nonnegative().optional(),
+});
+export type UpcomingScheduleItemInput = z.infer<typeof upcomingScheduleItemInputSchema>;
+
+export const upcomingScheduleItemSchema = upcomingScheduleItemInputSchema.extend({
+  id: z.string(),
+  sortOrder: z.number().int().nonnegative(),
+});
+export type UpcomingScheduleItem = z.infer<typeof upcomingScheduleItemSchema>;
+
+export const upcomingScheduleWeekInputSchema = z.object({
+  weekLabel: z.string().min(1, "El texto de la semana es obligatorio"),
+  isActive: z.boolean().optional(),
+});
+export type UpcomingScheduleWeekInput = z.infer<typeof upcomingScheduleWeekInputSchema>;
+
+export const upcomingScheduleWeekSchema = upcomingScheduleWeekInputSchema.extend({
+  id: z.string(),
+  isActive: z.boolean(),
+  items: z.array(upcomingScheduleItemSchema),
+});
+export type UpcomingScheduleWeek = z.infer<typeof upcomingScheduleWeekSchema>;
+
 export const contentSchema = z.object({
   beers: z.array(beerItemSchema),
   wines: z.array(wineItemSchema),
   events: z.array(eventItemSchema),
+  upcomingSchedule: upcomingScheduleWeekSchema.optional(),
 });
 export type ContentPayload = z.infer<typeof contentSchema>;
 
@@ -139,8 +166,47 @@ export const defaultEvents: EventItem[] = [
   },
 ];
 
+export const defaultUpcomingSchedule: UpcomingScheduleWeek = {
+  id: "schedule-week-1",
+  weekLabel: "Week of 1/12 to 1/18",
+  isActive: true,
+  items: [
+    {
+      id: "schedule-item-1",
+      title: "Sun - Thurs",
+      lines: ["Raffle tickets for Mariners game with each 16oz draft pour"],
+      sortOrder: 0,
+    },
+    {
+      id: "schedule-item-2",
+      title: "Thursday, 15th",
+      lines: ["Trades Appreciation Day 5pm-8pm", "Food truck on site", "@dirtyapronfood"],
+      sortOrder: 1,
+    },
+    {
+      id: "schedule-item-3",
+      title: "Friday, 16th",
+      lines: ["Latin Night at 9pm with @whois_jg", "DJ Trippy Kitty", "Food truck on site", "@dirtyapronfood"],
+      sortOrder: 2,
+    },
+    {
+      id: "schedule-item-4",
+      title: "Saturday, 17th",
+      lines: ["NFL Playoffs", "Food truck on site", "@dirtyapronfood"],
+      sortOrder: 3,
+    },
+    {
+      id: "schedule-item-5",
+      title: "Sunday, 18th",
+      lines: ["NFL Playoffs"],
+      sortOrder: 4,
+    },
+  ],
+};
+
 export const defaultContent: ContentPayload = {
   beers: defaultBeers,
   wines: defaultWines,
   events: defaultEvents,
+  upcomingSchedule: defaultUpcomingSchedule,
 };

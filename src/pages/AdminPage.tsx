@@ -1,10 +1,16 @@
-import { useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useContent } from "@/hooks/useContent";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { BeerItem, WineItem, WineCategory, EventItem } from "@shared/content";
+import type {
+  BeerItem,
+  WineItem,
+  WineCategory,
+  EventItem,
+  UpcomingScheduleItem,
+} from "@shared/content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +53,8 @@ type EventFormState = {
   borderColor: string;
   textColor: string;
 };
+type ScheduleWeekFormState = { weekLabel: string };
+type ScheduleItemFormState = { id: string | null; title: string; lines: string };
 
 const initialBeerForm: BeerFormState = { id: null, name: "", abv: "", price: "" };
 const initialWineForm: WineFormState = { id: null, name: "", category: "Whites", glass: "", bottle: "" };
@@ -63,6 +71,8 @@ const initialEventForm: EventFormState = {
   borderColor: "",
   textColor: "",
 };
+const initialScheduleWeekForm: ScheduleWeekFormState = { weekLabel: "" };
+const initialScheduleItemForm: ScheduleItemFormState = { id: null, title: "", lines: "" };
 
 const COLOR_FALLBACKS = {
   background: "#F5F5F5",
@@ -71,6 +81,12 @@ const COLOR_FALLBACKS = {
 };
 
 const parseHighlightsInput = (value: string) =>
+  value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+const parseLinesInput = (value: string) =>
   value
     .split("\n")
     .map((line) => line.trim())
@@ -98,6 +114,13 @@ const AdminPage = () => {
 
   const [eventForm, setEventForm] = useState<EventFormState>(initialEventForm);
   const [eventError, setEventError] = useState("");
+  const [scheduleWeekForm, setScheduleWeekForm] = useState<ScheduleWeekFormState>(
+    initialScheduleWeekForm
+  );
+  const [scheduleItemForm, setScheduleItemForm] = useState<ScheduleItemFormState>(
+    initialScheduleItemForm
+  );
+  const [scheduleError, setScheduleError] = useState("");
   const [menuFile, setMenuFile] = useState<File | null>(null);
   const [menuUploadError, setMenuUploadError] = useState("");
   const [isUploadingMenu, setIsUploadingMenu] = useState(false);
@@ -105,6 +128,8 @@ const AdminPage = () => {
   const beers = data?.beers ?? [];
   const wines = data?.wines ?? [];
   const events = data?.events ?? [];
+  const scheduleWeek = data?.upcomingSchedule;
+  const scheduleItems = scheduleWeek?.items ?? [];
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const menuPublicUrl = supabaseUrl
     ? `${supabaseUrl}/storage/v1/object/public/Cascadia/Menu/cascadia-menu.pdf`
@@ -113,8 +138,15 @@ const AdminPage = () => {
   const beerFormRef = useRef<HTMLFormElement>(null);
   const wineFormRef = useRef<HTMLFormElement>(null);
   const eventFormRef = useRef<HTMLFormElement>(null);
+  const scheduleFormRef = useRef<HTMLFormElement>(null);
 
   const isPending = (action: string) => pendingAction === action;
+
+  useEffect(() => {
+    if (scheduleWeek?.weekLabel) {
+      setScheduleWeekForm({ weekLabel: scheduleWeek.weekLabel });
+    }
+  }, [scheduleWeek?.weekLabel]);
 
   const runAction = async (
     action: string,
@@ -246,6 +278,40 @@ const AdminPage = () => {
     }
   };
 
+  const handleScheduleWeekSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!scheduleWeekForm.weekLabel.trim()) {
+      setScheduleError("Completa el texto de la semana.");
+      return;
+    }
+    setScheduleError("");
+    const payload = { weekLabel: scheduleWeekForm.weekLabel.trim() };
+    await runAction("update-schedule-week", "PUT", "/api/admin/upcoming-schedule/week", payload, "Schedule actualizado");
+  };
+
+  const handleScheduleItemSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!scheduleItemForm.title.trim()) {
+      setScheduleError("Completa el título del bloque.");
+      return;
+    }
+    const lines = parseLinesInput(scheduleItemForm.lines);
+    setScheduleError("");
+    const payload = {
+      title: scheduleItemForm.title.trim(),
+      lines,
+    };
+    const action = scheduleItemForm.id ? "update-schedule-item" : "create-schedule-item";
+    const method = scheduleItemForm.id ? "PUT" : "POST";
+    const url = scheduleItemForm.id
+      ? `/api/admin/upcoming-schedule/items/${scheduleItemForm.id}`
+      : "/api/admin/upcoming-schedule/items";
+    const success = await runAction(action, method, url, payload, "Schedule actualizado");
+    if (success) {
+      setScheduleItemForm(initialScheduleItemForm);
+    }
+  };
+
   const scrollToSection = (ref: RefObject<HTMLFormElement>) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -331,6 +397,15 @@ const AdminPage = () => {
     scrollToSection(eventFormRef);
   };
 
+  const handleScheduleItemEdit = (item: UpcomingScheduleItem) => {
+    setScheduleItemForm({
+      id: item.id,
+      title: item.title,
+      lines: item.lines.join("\n"),
+    });
+    scrollToSection(scheduleFormRef);
+  };
+
   const handleDeleteBeer = async (id: string) => {
     if (!confirm("¿Seguro que deseas eliminar esta cerveza?")) return;
     await runAction(`delete-beer-${id}`, "DELETE", `/api/admin/beers/${id}`, undefined, "Cerveza eliminada");
@@ -355,6 +430,20 @@ const AdminPage = () => {
     }
   };
 
+  const handleDeleteScheduleItem = async (id: string) => {
+    if (!confirm("¿Seguro que deseas eliminar este bloque del schedule?")) return;
+    await runAction(
+      `delete-schedule-item-${id}`,
+      "DELETE",
+      `/api/admin/upcoming-schedule/items/${id}`,
+      undefined,
+      "Schedule actualizado"
+    );
+    if (scheduleItemForm.id === id) {
+      setScheduleItemForm(initialScheduleItemForm);
+    }
+  };
+
   const handleResetBeers = async () => {
     await runAction("reset-beers", "POST", "/api/admin/beers/reset", undefined, "Lista de cervezas restaurada");
     setBeerForm(initialBeerForm);
@@ -368,6 +457,17 @@ const AdminPage = () => {
   const handleResetEvents = async () => {
     await runAction("reset-events", "POST", "/api/admin/events/reset", undefined, "Eventos restaurados");
     setEventForm(initialEventForm);
+  };
+
+  const handleResetSchedule = async () => {
+    await runAction(
+      "reset-schedule",
+      "POST",
+      "/api/admin/upcoming-schedule/reset",
+      undefined,
+      "Schedule restaurado"
+    );
+    setScheduleItemForm(initialScheduleItemForm);
   };
 
   const handleMenuUpload = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -757,7 +857,7 @@ const AdminPage = () => {
           </CardContent>
         </Card>
 
-        {/* Events management
+        {/* Events management */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
@@ -863,7 +963,6 @@ const AdminPage = () => {
             </form>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -956,7 +1055,140 @@ const AdminPage = () => {
             )}
           </CardContent>
         </Card>
-        */}
+
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-2xl">Upcoming Schedule</CardTitle>
+              <CardDescription>Actualiza la semana y los bloques del schedule.</CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetSchedule}
+              className="gap-2"
+              disabled={isPending("reset-schedule")}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Restaurar schedule
+            </Button>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <form
+              className="grid gap-4 md:grid-cols-[1fr_auto]"
+              onSubmit={handleScheduleWeekSubmit}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="schedule-week-label">Texto de la semana</Label>
+                <Input
+                  id="schedule-week-label"
+                  value={scheduleWeekForm.weekLabel}
+                  onChange={(event) =>
+                    setScheduleWeekForm((prev) => ({ ...prev, weekLabel: event.target.value }))
+                  }
+                  placeholder="Week of 1/12 to 1/18"
+                  required
+                />
+              </div>
+              <div className="flex items-end">
+                <Button type="submit" disabled={isPending("update-schedule-week")}>
+                  Guardar semana
+                </Button>
+              </div>
+            </form>
+
+            <form ref={scheduleFormRef} className="grid gap-4" onSubmit={handleScheduleItemSubmit}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="schedule-title">Título del bloque</Label>
+                  <Input
+                    id="schedule-title"
+                    value={scheduleItemForm.title}
+                    onChange={(event) =>
+                      setScheduleItemForm((prev) => ({ ...prev, title: event.target.value }))
+                    }
+                    placeholder="Ej. Thursday, 15th"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="schedule-lines">Líneas (una por línea)</Label>
+                  <Textarea
+                    id="schedule-lines"
+                    value={scheduleItemForm.lines}
+                    onChange={(event) =>
+                      setScheduleItemForm((prev) => ({ ...prev, lines: event.target.value }))
+                    }
+                    placeholder="Trades Appreciation Day 5pm-8pm"
+                  />
+                </div>
+              </div>
+              {scheduleError && <p className="text-sm text-red-500">{scheduleError}</p>}
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  disabled={isPending("create-schedule-item") || isPending("update-schedule-item")}
+                >
+                  {scheduleItemForm.id ? "Guardar bloque" : "Agregar bloque"}
+                </Button>
+                {scheduleItemForm.id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setScheduleItemForm(initialScheduleItemForm);
+                      setScheduleError("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            <div>
+              <p className="text-sm font-semibold text-slate-700 mb-2">
+                Bloques publicados ({scheduleItems.length})
+              </p>
+              {scheduleItems.length === 0 ? (
+                <p className="text-sm text-slate-600">Todavía no hay bloques en el schedule.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Detalle</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {scheduleItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>
+                          {item.lines.length === 0 ? "—" : item.lines.join(" · ")}
+                        </TableCell>
+                        <TableCell className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleScheduleItemEdit(item)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteScheduleItem(item.id)}
+                            disabled={isPending(`delete-schedule-item-${item.id}`)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

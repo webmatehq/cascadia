@@ -4,21 +4,32 @@ import { contactFormSchema, insertContactMessageSchema } from "@shared/schema";
 import {
   createBeer,
   createEvent,
+  createUpcomingScheduleItem,
   createWine,
   deleteBeer,
   deleteEvent,
+  deleteUpcomingScheduleItem,
   deleteWine,
   getContent,
   resetAll,
   resetBeers,
   resetEvents,
+  resetUpcomingSchedule,
   resetWines,
+  updateUpcomingScheduleItem,
   updateBeer,
   updateEvent,
+  upsertUpcomingScheduleWeek,
   updateWine,
 } from "./content-store";
 import { fromZodError } from "zod-validation-error";
-import { beerInputSchema, eventInputSchema, wineInputSchema } from "@shared/content";
+import {
+  beerInputSchema,
+  eventInputSchema,
+  upcomingScheduleItemInputSchema,
+  upcomingScheduleWeekInputSchema,
+  wineInputSchema,
+} from "@shared/content";
 
 const handleError = (error: unknown, res: Response) => {
   if (error instanceof ZodError) {
@@ -205,6 +216,54 @@ export function registerRoutes(app: Express) {
     try {
       const events = await resetEvents();
       res.json(events);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.put("/api/admin/upcoming-schedule/week", async (req, res) => {
+    try {
+      const payload = upcomingScheduleWeekInputSchema.parse(req.body);
+      const scheduleWeek = await upsertUpcomingScheduleWeek(payload);
+      res.json(scheduleWeek);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.post("/api/admin/upcoming-schedule/items", async (req, res) => {
+    try {
+      const payload = upcomingScheduleItemInputSchema.parse(req.body);
+      const item = await createUpcomingScheduleItem(payload);
+      res.status(201).json(item);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.put("/api/admin/upcoming-schedule/items/:id", async (req, res) => {
+    try {
+      const payload = upcomingScheduleItemInputSchema.parse(req.body);
+      const item = await updateUpcomingScheduleItem(req.params.id, payload);
+      res.json(item);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.delete("/api/admin/upcoming-schedule/items/:id", async (req, res) => {
+    try {
+      await deleteUpcomingScheduleItem(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.post("/api/admin/upcoming-schedule/reset", async (_req, res) => {
+    try {
+      const scheduleWeek = await resetUpcomingSchedule();
+      res.json(scheduleWeek);
     } catch (error) {
       handleError(error, res);
     }

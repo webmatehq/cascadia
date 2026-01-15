@@ -5,6 +5,8 @@ import {
   varchar,
   timestamp,
   numeric,
+  integer,
+  boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -63,6 +65,30 @@ export const eventHighlights = pgTable("event_highlights", {
   highlight: text("highlight").notNull(),
 });
 
+export const upcomingScheduleWeeks = pgTable("upcoming_schedule_weeks", {
+  id: text("id").primaryKey(),
+  weekLabel: text("week_label").notNull(),
+  isActive: boolean("is_active").notNull().default(false),
+});
+
+export const upcomingScheduleItems = pgTable("upcoming_schedule_items", {
+  id: text("id").primaryKey(),
+  weekId: text("week_id")
+    .notNull()
+    .references(() => upcomingScheduleWeeks.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const upcomingScheduleLines = pgTable("upcoming_schedule_lines", {
+  id: serial("id").primaryKey(),
+  itemId: text("item_id")
+    .notNull()
+    .references(() => upcomingScheduleItems.id, { onDelete: "cascade" }),
+  lineText: text("line_text").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -87,6 +113,9 @@ export type BeerRow = typeof beers.$inferSelect;
 export type WineRow = typeof wines.$inferSelect;
 export type EventRow = typeof events.$inferSelect;
 export type EventHighlightRow = typeof eventHighlights.$inferSelect;
+export type UpcomingScheduleWeekRow = typeof upcomingScheduleWeeks.$inferSelect;
+export type UpcomingScheduleItemRow = typeof upcomingScheduleItems.$inferSelect;
+export type UpcomingScheduleLineRow = typeof upcomingScheduleLines.$inferSelect;
 
 // Form validation schemas
 export const contactFormSchema = z.object({
