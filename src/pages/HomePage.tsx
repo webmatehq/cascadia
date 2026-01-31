@@ -42,7 +42,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <AboutSection />
-        <OwnersSection />
+        {/* <OwnersSection /> */}
         <EventsSection />
         <UpcomingScheduleSection />
         <BeerListSection/>
