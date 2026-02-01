@@ -78,6 +78,17 @@ const formatPdfTextAsHtml = (text: string) => {
     .join("");
 };
 
+const parseSender = (value: string) => {
+  const match = value.match(/^(.*)<([^>]+)>$/);
+  if (!match) {
+    return { name: "Cascadia Tap House", email: value.trim() };
+  }
+  return {
+    name: match[1].trim().replace(/^"|"$/g, "") || "Cascadia Tap House",
+    email: match[2].trim(),
+  };
+};
+
 export function registerRoutes(app: Express) {
   app.post(
     "/api/admin/menu-upload",
@@ -410,12 +421,13 @@ export function registerRoutes(app: Express) {
           SMTP_USER,
           SMTP_PASS,
           MAIL_FROM,
+          BREVO_API_KEY,
         } = process.env;
 
-        if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !MAIL_FROM) {
+        if (!MAIL_FROM) {
           return res.status(500).json({
             success: false,
-            message: "Email service is not configured.",
+            message: "MAIL_FROM is not configured.",
           });
         }
 
@@ -441,38 +453,77 @@ export function registerRoutes(app: Express) {
         const htmlBody = formatPdfTextAsHtml(parsed.text || "");
         const textBody = parsed.text?.trim() || "Newsletter update.";
 
-        const transporter = nodemailer.createTransport({
-          host: SMTP_HOST,
-          port: Number(SMTP_PORT),
-          secure: SMTP_SECURE === "true",
-          auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS,
-          },
-        });
-
         const bccList = subscribers.map((subscriber) => subscriber.email);
+        const sender = parseSender(MAIL_FROM);
 
-        await transporter.sendMail({
-          from: MAIL_FROM,
-          to: MAIL_FROM,
-          bcc: bccList,
-          subject: Array.isArray(subject) ? subject[0] : subject,
-          text: textBody,
-          html: `
-            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; padding: 24px;">
-              <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden;">
-                <div style="background: #1e3a5f; color: #ffffff; padding: 24px;">
-                  <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.3px;">Cascadia Tap House</h1>
-                  <p style="margin: 6px 0 0; font-size: 14px; opacity: 0.9;">Newsletter update</p>
-                </div>
-                <div style="padding: 24px;">
-                  ${htmlBody}
-                </div>
+        const emailSubject = Array.isArray(subject) ? subject[0] : subject;
+        const html = `
+          <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; padding: 24px;">
+            <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden;">
+              <div style="background: #1e3a5f; color: #ffffff; padding: 24px;">
+                <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.3px;">Cascadia Tap House</h1>
+                <p style="margin: 6px 0 0; font-size: 14px; opacity: 0.9;">Newsletter update</p>
+              </div>
+              <div style="padding: 24px;">
+                ${htmlBody}
               </div>
             </div>
-          `,
-        });
+          </div>
+        `;
+
+        console.log(BREVO_API_KEY,"BREVO_API_KEY")
+
+        if (BREVO_API_KEY) {
+          const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "api-key": BREVO_API_KEY,
+            },
+            body: JSON.stringify({
+              sender,
+              to: [sender],
+              bcc: bccList.map((email) => ({ email })),
+              subject: emailSubject,
+              htmlContent: html,
+              textContent: textBody,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text().catch(() => "");
+            return res.status(500).json({
+              success: false,
+              message: errorText || "No se pudo enviar el newsletter con Brevo.",
+            });
+          }
+        } else {
+          if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+            return res.status(500).json({
+              success: false,
+              message: "Email service is not configured.",
+            });
+          }
+
+          const transporter = nodemailer.createTransport({
+            host: SMTP_HOST,
+            port: Number(SMTP_PORT),
+            secure: SMTP_SECURE === "true",
+            auth: {
+              user: SMTP_USER,
+              pass: SMTP_PASS,
+            },
+          });
+
+          await transporter.sendMail({
+            from: MAIL_FROM,
+            to: MAIL_FROM,
+            bcc: bccList,
+            subject: emailSubject,
+            text: textBody,
+            html,
+          });
+        }
 
         return res.status(200).json({
           success: true,

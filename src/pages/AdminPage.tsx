@@ -205,11 +205,8 @@ const AdminPage = () => {
   const [menuUploadError, setMenuUploadError] = useState("");
   const [isUploadingMenu, setIsUploadingMenu] = useState(false);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<NewsletterSubscriber[]>([]);
-  const [newsletterSubject, setNewsletterSubject] = useState("Cascadia Tap House Newsletter");
-  const [newsletterFile, setNewsletterFile] = useState<File | null>(null);
   const [newsletterError, setNewsletterError] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState("");
-  const [isSendingNewsletter, setIsSendingNewsletter] = useState(false);
   const [isLoadingNewsletter, setIsLoadingNewsletter] = useState(false);
 
   const beers = data?.beers ?? [];
@@ -666,44 +663,21 @@ const AdminPage = () => {
     window.location.href = "/api/admin/newsletter/export";
   };
 
-  const handleSendNewsletter = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleCopyNewsletterEmails = async () => {
     setNewsletterError("");
     setNewsletterStatus("");
-
-    if (!newsletterFile) {
-      setNewsletterError("Selecciona un PDF para enviar.");
-      return;
-    }
-
-    if (!newsletterSubject.trim()) {
-      setNewsletterError("Agrega un asunto para el correo.");
+    if (newsletterSubscribers.length === 0) {
+      setNewsletterError("No hay correos para copiar.");
       return;
     }
 
     try {
-      setIsSendingNewsletter(true);
-      const url = `/api/admin/newsletter/send?subject=${encodeURIComponent(newsletterSubject.trim())}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
-        body: newsletterFile,
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      setNewsletterStatus("Newsletter enviado correctamente.");
-      setNewsletterFile(null);
+      const emails = newsletterSubscribers.map((subscriber) => subscriber.email).join(", ");
+      await navigator.clipboard.writeText(emails);
+      setNewsletterStatus("Correos copiados al portapapeles.");
     } catch (error) {
       console.error(error);
-      setNewsletterError("Ocurrió un error al enviar el newsletter.");
-    } finally {
-      setIsSendingNewsletter(false);
+      setNewsletterError("No se pudo copiar. Intenta otra vez.");
     }
   };
 
@@ -1449,9 +1423,14 @@ const AdminPage = () => {
                   <p className="text-sm text-slate-500">Cargando suscriptores...</p>
                 )}
               </div>
-              <Button type="button" variant="outline" onClick={handleDownloadNewsletter}>
-                Descargar CSV
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button type="button" variant="outline" onClick={handleCopyNewsletterEmails}>
+                  Copiar correos
+                </Button>
+                <Button type="button" variant="outline" onClick={handleDownloadNewsletter}>
+                  Descargar CSV
+                </Button>
+              </div>
             </div>
             {newsletterError && <p className="text-sm text-red-500">{newsletterError}</p>}
             {newsletterSubscribers.length === 0 && !isLoadingNewsletter ? (
@@ -1476,40 +1455,6 @@ const AdminPage = () => {
                 </TableBody>
               </Table>
             )}
-
-            <form className="grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={handleSendNewsletter}>
-              <div className="space-y-2">
-                <Label htmlFor="newsletter-subject">Asunto del correo</Label>
-                <Input
-                  id="newsletter-subject"
-                  value={newsletterSubject}
-                  onChange={(event) => setNewsletterSubject(event.target.value)}
-                  placeholder="Cascadia Tap House Newsletter"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newsletter-pdf">Archivo PDF</Label>
-                <Input
-                  id="newsletter-pdf"
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setNewsletterFile(file);
-                    setNewsletterError("");
-                  }}
-                />
-                {newsletterFile && (
-                  <p className="text-sm text-slate-600">Seleccionado: {newsletterFile.name}</p>
-                )}
-              </div>
-              <div className="flex items-end">
-                <Button type="submit" disabled={isSendingNewsletter}>
-                  {isSendingNewsletter ? "Enviando..." : "Enviar newsletter"}
-                </Button>
-              </div>
-            </form>
             {newsletterStatus && <p className="text-sm text-emerald-600">{newsletterStatus}</p>}
           </CardContent>
         </Card>
