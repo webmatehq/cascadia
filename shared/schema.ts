@@ -27,6 +27,12 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 200 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const wineCategoryEnum = pgEnum("wine_category", ["Whites", "Rosé", "Reds", "Wine Cocktails"]);
 
 export const beers = pgTable("beers", {
@@ -108,6 +114,7 @@ export type User = typeof users.$inferSelect;
 
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+export type NewsletterSubscriberRow = typeof newsletterSubscribers.$inferSelect;
 
 export type BeerRow = typeof beers.$inferSelect;
 export type WineRow = typeof wines.$inferSelect;
@@ -123,4 +130,8 @@ export const contactFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   subject: z.string().min(2, "Subject must be at least 2 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
+});
+
+export const newsletterSignupSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
 });

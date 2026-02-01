@@ -589,6 +589,21 @@ export const deleteUpcomingScheduleItem = async (id: string) => {
   }
 };
 
+export const reorderUpcomingScheduleItems = async (
+  items: { id: string; sortOrder: number }[]
+) => {
+  if (items.length === 0) return;
+
+  await db.transaction(async (tx) => {
+    for (const item of items) {
+      await tx
+        .update(upcomingScheduleItems)
+        .set({ sortOrder: item.sortOrder })
+        .where(eq(upcomingScheduleItems.id, item.id));
+    }
+  });
+};
+
 export const resetUpcomingSchedule = async (): Promise<UpcomingScheduleWeek> => {
   if (!defaultContent.upcomingSchedule) {
     throw new Error("Default schedule is missing");

@@ -1,4 +1,21 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/context/AuthContext";
 import { useContent } from "@/hooks/useContent";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,7 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 
 type BeerFormState = { id: string | null; name: string; abv: string; price: string };
 type WineFormState = {
@@ -55,6 +72,7 @@ type EventFormState = {
 };
 type ScheduleWeekFormState = { weekLabel: string };
 type ScheduleItemFormState = { id: string | null; title: string; lines: string };
+type NewsletterSubscriber = { id: number; email: string; createdAt: string };
 
 const initialBeerForm: BeerFormState = { id: null, name: "", abv: "", price: "" };
 const initialWineForm: WineFormState = { id: null, name: "", category: "Whites", glass: "", bottle: "" };
@@ -95,6 +113,66 @@ const parseLinesInput = (value: string) =>
 const getColorInputValue = (value: string, fallback: string) =>
   value && /^#[0-9A-Fa-f]{3,6}$/i.test(value) ? value : fallback;
 
+const ScheduleSortableRow = ({
+  item,
+  onEdit,
+  onDelete,
+  disableActions,
+}: {
+  item: UpcomingScheduleItem;
+  onEdit: (item: UpcomingScheduleItem) => void;
+  onDelete: (id: string) => void;
+  disableActions: boolean;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex flex-col gap-3 rounded-lg border bg-white p-4 shadow-sm ${
+        isDragging ? "opacity-70" : ""
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          className="mt-1 cursor-grab text-slate-400 hover:text-slate-600"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <div className="flex-1">
+          <p className="font-semibold text-slate-900">{item.title}</p>
+          <p className="text-sm text-slate-600">
+            {item.lines.length === 0 ? "—" : item.lines.join(" · ")}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(item)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(item.id)}
+            disabled={disableActions}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminPage = () => {
   const { isAuthenticated, login, logout } = useAuth();
   const { data, isLoading, isError, refetch } = useContent();
@@ -121,9 +199,18 @@ const AdminPage = () => {
     initialScheduleItemForm
   );
   const [scheduleError, setScheduleError] = useState("");
+  const [scheduleOrder, setScheduleOrder] = useState<UpcomingScheduleItem[]>([]);
+  const [scheduleOrderDirty, setScheduleOrderDirty] = useState(false);
   const [menuFile, setMenuFile] = useState<File | null>(null);
   const [menuUploadError, setMenuUploadError] = useState("");
   const [isUploadingMenu, setIsUploadingMenu] = useState(false);
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<NewsletterSubscriber[]>([]);
+  const [newsletterSubject, setNewsletterSubject] = useState("Cascadia Tap House Newsletter");
+  const [newsletterFile, setNewsletterFile] = useState<File | null>(null);
+  const [newsletterError, setNewsletterError] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState("");
+  const [isSendingNewsletter, setIsSendingNewsletter] = useState(false);
+  const [isLoadingNewsletter, setIsLoadingNewsletter] = useState(false);
 
   const beers = data?.beers ?? [];
   const wines = data?.wines ?? [];
@@ -147,6 +234,34 @@ const AdminPage = () => {
       setScheduleWeekForm({ weekLabel: scheduleWeek.weekLabel });
     }
   }, [scheduleWeek?.weekLabel]);
+
+  useEffect(() => {
+    setScheduleOrder(scheduleItems);
+    setScheduleOrderDirty(false);
+  }, [scheduleItems]);
+
+  useEffect(() => {
+    const loadNewsletterSubscribers = async () => {
+      if (!isAuthenticated) return;
+      setIsLoadingNewsletter(true);
+      setNewsletterError("");
+      try {
+        const response = await fetch("/api/admin/newsletter", { credentials: "include" });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const data = await response.json();
+        setNewsletterSubscribers(data.subscribers ?? []);
+      } catch (error) {
+        console.error(error);
+        setNewsletterError("No se pudieron cargar los correos del newsletter.");
+      } finally {
+        setIsLoadingNewsletter(false);
+      }
+    };
+
+    loadNewsletterSubscribers();
+  }, [isAuthenticated]);
 
   const runAction = async (
     action: string,
@@ -309,6 +424,47 @@ const AdminPage = () => {
     const success = await runAction(action, method, url, payload, "Schedule actualizado");
     if (success) {
       setScheduleItemForm(initialScheduleItemForm);
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const scheduleIds = useMemo(() => scheduleOrder.map((item) => item.id), [scheduleOrder]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = scheduleOrder.findIndex((item) => item.id === active.id);
+    const newIndex = scheduleOrder.findIndex((item) => item.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    setScheduleOrder((items) => arrayMove(items, oldIndex, newIndex));
+    setScheduleOrderDirty(true);
+  };
+
+  const handleSaveScheduleOrder = async () => {
+    if (scheduleOrder.length === 0) return;
+    setPendingAction("reorder-schedule");
+    try {
+      const payload = scheduleOrder.map((item, index) => ({
+        id: item.id,
+        sortOrder: index,
+      }));
+      await apiRequest("PUT", "/api/admin/upcoming-schedule/items/reorder", payload);
+      await queryClient.invalidateQueries({ queryKey: ["/api/content"] });
+      toast({ title: "Orden del schedule actualizado" });
+      setScheduleOrderDirty(false);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error al ordenar",
+        description: "No se pudo cambiar el orden. Intenta otra vez.",
+        variant: "destructive",
+      });
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -503,6 +659,51 @@ const AdminPage = () => {
       setMenuUploadError("Ocurrió un error al subir el menú. Intenta otra vez.");
     } finally {
       setIsUploadingMenu(false);
+    }
+  };
+
+  const handleDownloadNewsletter = () => {
+    window.location.href = "/api/admin/newsletter/export";
+  };
+
+  const handleSendNewsletter = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setNewsletterError("");
+    setNewsletterStatus("");
+
+    if (!newsletterFile) {
+      setNewsletterError("Selecciona un PDF para enviar.");
+      return;
+    }
+
+    if (!newsletterSubject.trim()) {
+      setNewsletterError("Agrega un asunto para el correo.");
+      return;
+    }
+
+    try {
+      setIsSendingNewsletter(true);
+      const url = `/api/admin/newsletter/send?subject=${encodeURIComponent(newsletterSubject.trim())}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+        body: newsletterFile,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      setNewsletterStatus("Newsletter enviado correctamente.");
+      setNewsletterFile(null);
+    } catch (error) {
+      console.error(error);
+      setNewsletterError("Ocurrió un error al enviar el newsletter.");
+    } finally {
+      setIsSendingNewsletter(false);
     }
   };
 
@@ -1062,16 +1263,26 @@ const AdminPage = () => {
               <CardTitle className="text-2xl">Upcoming Schedule</CardTitle>
               <CardDescription>Actualiza la semana y los bloques del schedule.</CardDescription>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResetSchedule}
-              className="gap-2"
-              disabled={isPending("reset-schedule")}
-            >
-              <RefreshCw className="h-4 w-4" />
-              Restaurar schedule
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveScheduleOrder}
+                disabled={isPending("reorder-schedule") || !scheduleOrderDirty}
+              >
+                Guardar orden
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetSchedule}
+                className="gap-2"
+                disabled={isPending("reset-schedule")}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Restaurar schedule
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-6">
             <form
@@ -1148,43 +1359,26 @@ const AdminPage = () => {
 
             <div>
               <p className="text-sm font-semibold text-slate-700 mb-2">
-                Bloques publicados ({scheduleItems.length})
+                Bloques publicados ({scheduleOrder.length})
               </p>
-              {scheduleItems.length === 0 ? (
+              {scheduleOrder.length === 0 ? (
                 <p className="text-sm text-slate-600">Todavía no hay bloques en el schedule.</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Título</TableHead>
-                      <TableHead>Detalle</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {scheduleItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.title}</TableCell>
-                        <TableCell>
-                          {item.lines.length === 0 ? "—" : item.lines.join(" · ")}
-                        </TableCell>
-                        <TableCell className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleScheduleItemEdit(item)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteScheduleItem(item.id)}
-                            disabled={isPending(`delete-schedule-item-${item.id}`)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={scheduleIds} strategy={verticalListSortingStrategy}>
+                    <div className="grid gap-3">
+                      {scheduleOrder.map((item) => (
+                        <ScheduleSortableRow
+                          key={item.id}
+                          item={item}
+                          onEdit={handleScheduleItemEdit}
+                          onDelete={handleDeleteScheduleItem}
+                          disableActions={isPending(`delete-schedule-item-${item.id}`)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </CardContent>
@@ -1235,6 +1429,88 @@ const AdminPage = () => {
                 </a>
               </p>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Newsletter</CardTitle>
+            <CardDescription>
+              Gestiona los correos suscritos y envía actualizaciones en PDF.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">
+                  Suscriptores ({newsletterSubscribers.length})
+                </p>
+                {isLoadingNewsletter && (
+                  <p className="text-sm text-slate-500">Cargando suscriptores...</p>
+                )}
+              </div>
+              <Button type="button" variant="outline" onClick={handleDownloadNewsletter}>
+                Descargar CSV
+              </Button>
+            </div>
+            {newsletterError && <p className="text-sm text-red-500">{newsletterError}</p>}
+            {newsletterSubscribers.length === 0 && !isLoadingNewsletter ? (
+              <p className="text-sm text-slate-600">Todavía no hay correos suscritos.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {newsletterSubscribers.map((subscriber) => (
+                    <TableRow key={subscriber.id}>
+                      <TableCell className="font-medium">{subscriber.email}</TableCell>
+                      <TableCell>
+                        {new Date(subscriber.createdAt).toLocaleDateString("en-US")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+
+            <form className="grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={handleSendNewsletter}>
+              <div className="space-y-2">
+                <Label htmlFor="newsletter-subject">Asunto del correo</Label>
+                <Input
+                  id="newsletter-subject"
+                  value={newsletterSubject}
+                  onChange={(event) => setNewsletterSubject(event.target.value)}
+                  placeholder="Cascadia Tap House Newsletter"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newsletter-pdf">Archivo PDF</Label>
+                <Input
+                  id="newsletter-pdf"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setNewsletterFile(file);
+                    setNewsletterError("");
+                  }}
+                />
+                {newsletterFile && (
+                  <p className="text-sm text-slate-600">Seleccionado: {newsletterFile.name}</p>
+                )}
+              </div>
+              <div className="flex items-end">
+                <Button type="submit" disabled={isSendingNewsletter}>
+                  {isSendingNewsletter ? "Enviando..." : "Enviar newsletter"}
+                </Button>
+              </div>
+            </form>
+            {newsletterStatus && <p className="text-sm text-emerald-600">{newsletterStatus}</p>}
           </CardContent>
         </Card>
       </div>
