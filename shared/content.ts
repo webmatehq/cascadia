@@ -36,6 +36,7 @@ export const eventInputSchema = z.object({
   time: z.string().optional(),
   location: z.string().min(1, "La ubicación es obligatoria"),
   highlights: z.array(z.string()).default([]),
+  orderedList: z.boolean().optional(),
   backgroundColor: z.string().optional(),
   borderColor: z.string().optional(),
   textColor: z.string().optional(),

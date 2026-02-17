@@ -58,6 +58,7 @@ export const events = pgTable("events", {
   dateText: text("date_text").notNull(),
   timeText: text("time_text"),
   location: text("location").notNull(),
+  orderedList: boolean("ordered_list").notNull().default(false),
   backgroundColor: text("background_color"),
   borderColor: text("border_color"),
   textColor: text("text_color"),

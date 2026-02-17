@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Clock, Utensils } from "lucide-react";
+import { Calendar, MapPin, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useContent } from "@/hooks/useContent";
 import {
@@ -22,6 +22,7 @@ const EventsSection = () => {
     time: eventItem.time,
     location: eventItem.location,
     bullets: eventItem.highlights,
+    orderedList: eventItem.orderedList ?? false,
     background: eventItem.backgroundColor ?? "#F5F5F5",
     border: eventItem.borderColor ?? "#E5E5E5",
     textColor: eventItem.textColor ?? "#1F2937",
@@ -35,11 +36,16 @@ const EventsSection = () => {
     return () => clearInterval(interval);
   }, [carouselApi]);
 
-  const renderBullet = (bullet: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const matches = [...bullet.matchAll(urlRegex)];
+  const hasManualNumber = (bullet: string) => /^\s*\d+[.)]\s*/.test(bullet);
 
-    if (matches.length === 0) return bullet;
+  const cleanBulletText = (bullet: string) => bullet.replace(/^[\s]*\d+[.)]\s*/, "");
+
+  const renderBullet = (bullet: string, stripLeadingNumber = false) => {
+    const text = stripLeadingNumber ? cleanBulletText(bullet) : bullet;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = [...text.matchAll(urlRegex)];
+
+    if (matches.length === 0) return text;
 
     const parts: (string | JSX.Element)[] = [];
     let lastIndex = 0;
@@ -49,7 +55,7 @@ const EventsSection = () => {
       const url = match[0];
 
       if (start > lastIndex) {
-        parts.push(bullet.slice(lastIndex, start));
+        parts.push(text.slice(lastIndex, start));
       }
 
       parts.push(
@@ -67,8 +73,8 @@ const EventsSection = () => {
       lastIndex = start + url.length;
     });
 
-    if (lastIndex < bullet.length) {
-      parts.push(bullet.slice(lastIndex));
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
     }
 
     return parts;
@@ -123,14 +129,45 @@ const EventsSection = () => {
                         </div>
 
                         {event.bullets.length > 0 && (
-                          <ul className="space-y-2 text-sm">
-                            {event.bullets.map((bullet, index) => (
-                              <li key={`${event.id}-highlight-${index}`} className="flex items-start gap-2">
-                                <Utensils className="w-4 h-4 mt-1 text-[#D9A566]" />
-                                <span>{renderBullet(bullet)}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          (() => {
+                            const manualNumbers = event.bullets.some(hasManualNumber);
+                            const useOrdered = event.orderedList && !manualNumbers;
+
+                            if (useOrdered) {
+                              return (
+                                <ol className="list-decimal pl-5 space-y-2 text-sm marker:text-[#D9A566] marker:font-semibold">
+                                  {event.bullets.map((bullet, index) => (
+                                    <li key={`${event.id}-highlight-${index}`} className="leading-relaxed text-left">
+                                      {renderBullet(bullet, true)}
+                                    </li>
+                                  ))}
+                                </ol>
+                              );
+                            }
+
+                            return (
+                              <ul className="space-y-2 text-sm pl-0">
+                                {event.bullets.map((bullet, index) => {
+                                  const manual = hasManualNumber(bullet);
+                                  return (
+                                    <li
+                                      key={`${event.id}-highlight-${index}`}
+                                      className="leading-relaxed text-left list-none"
+                                    >
+                                      {manual ? (
+                                        renderBullet(bullet, false)
+                                      ) : (
+                                        <span className="relative pl-4">
+                                          <span className="absolute left-0 top-2 block h-1.5 w-1.5 rounded-full bg-[#D9A566]" />
+                                          {renderBullet(bullet, false)}
+                                        </span>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            );
+                          })()
                         )}
                       </div>
                     </div>
