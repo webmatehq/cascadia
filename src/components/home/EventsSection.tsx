@@ -35,6 +35,45 @@ const EventsSection = () => {
     return () => clearInterval(interval);
   }, [carouselApi]);
 
+  const renderBullet = (bullet: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = [...bullet.matchAll(urlRegex)];
+
+    if (matches.length === 0) return bullet;
+
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+
+    matches.forEach((match, idx) => {
+      const start = match.index ?? 0;
+      const url = match[0];
+
+      if (start > lastIndex) {
+        parts.push(bullet.slice(lastIndex, start));
+      }
+
+      parts.push(
+        <a
+          key={`bullet-url-${idx}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-[#D9A566] break-all"
+        >
+          {url}
+        </a>
+      );
+
+      lastIndex = start + url.length;
+    });
+
+    if (lastIndex < bullet.length) {
+      parts.push(bullet.slice(lastIndex));
+    }
+
+    return parts;
+  };
+
   return (
     <section id="events" className="bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto text-center">
@@ -88,7 +127,7 @@ const EventsSection = () => {
                             {event.bullets.map((bullet, index) => (
                               <li key={`${event.id}-highlight-${index}`} className="flex items-start gap-2">
                                 <Utensils className="w-4 h-4 mt-1 text-[#D9A566]" />
-                                <span>{bullet}</span>
+                                <span>{renderBullet(bullet)}</span>
                               </li>
                             ))}
                           </ul>
